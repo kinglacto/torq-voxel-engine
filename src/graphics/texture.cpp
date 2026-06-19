@@ -1,214 +1,238 @@
-//
-// Created by yashas on 6/12/25.
-//
-
 #include "texture.h"
-#include <filesystem>
-#include <algorithm>
-#include <cmath>
-#include <string.h>
-#include <assets.h>
 
-#include <stb_image_write.h>
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <utility>
+
+#include <stb_image.h>
 
 namespace fs = std::filesystem;
 
-Texture::Texture(const std::string& texturePath): id{0} {
+namespace {
+constexpr GLint MINECRAFT_STYLE_MIPMAP_LEVELS = 4;
+
+bool getTextureFormats(int nrChannels, GLint& internalFormat, GLenum& dataFormat) {
+	switch (nrChannels) {
+	case 1:
+		internalFormat = GL_R8;
+		dataFormat = GL_RED;
+		return true;
+	case 3:
+		internalFormat = GL_RGB8;
+		dataFormat = GL_RGB;
+		return true;
+	case 4:
+		internalFormat = GL_RGBA8;
+		dataFormat = GL_RGBA;
+		return true;
+	default:
+		return false;
+	}
+}
+
+GLint getMinecraftStyleMaxMipmapLevel(int size) {
+	GLint level = 0;
+	while (size > 1 && level < MINECRAFT_STYLE_MIPMAP_LEVELS) {
+		size /= 2;
+		level++;
+	}
+
+	return level;
+}
+
+}
+
+Texture::Texture(const std::string& texturePath) {
 	setup(texturePath);
 }
 
-Texture::~Texture() = default;
-
-void Texture::setup(const std::string& texturePath) {
-	// NOTE: stbi_load, glTexImage2D load/read raw data DIFFERENTLY. 
-	// look up their expected formats before reading this code
-	
-	// Consequence: the jk-loop below can be simplified to use 
-	// int srcIndex = (j * tileSize + k) * nrChannels; if this is set to true:
-	// stbi_set_flip_vertically_on_load(true);
-	// I set it to false (default) so that I can fetch data as is (in png format).
-
-	loadTextures(texturePath);
-
-	if (height == width){
-		tileSize = width;
-	}
-
-	else{
-		std::cerr << "Error loading texture, not of square dimensions: (" << height << ", " << width << ")"
-		<< std::endl;
-		return;
-	}
-
-	tilesPerRow = std::ceil(std::sqrt(textures.size()));
-	atlasSize = tilesPerRow * tileSize;
-	auto* atlas = static_cast<unsigned char *>(calloc(atlasSize * atlasSize * nrChannels, 1));
-
-	for(int i = 0; i < textures.size(); i++){
-		int x = (i % tilesPerRow);
-		int y = (i / tilesPerRow);
-
-		float pixelOffset = 0.5f / atlasSize;
-		float u0 = (static_cast<float>(x * tileSize) + pixelOffset) / atlasSize;
-		float v0 = (static_cast<float>(y * tileSize) + pixelOffset) / atlasSize;
-		float u1 = (static_cast<float>(x * tileSize + tileSize) - pixelOffset) / atlasSize;
-		float v1 = (static_cast<float>(y * tileSize + tileSize) - pixelOffset) / atlasSize;
-
-
-		uvMap[textures[i].id] = glm::vec4(u0, v0, u1, v1);
-
-		x *= tileSize;
-		y *= tileSize;
-
-		for(int j = 0; j < tileSize; j++){
-			for(int k = 0; k < tileSize; k++){
-				int srcIndex = ((tileSize - 1 - j) * tileSize + k) * nrChannels;
-				int atlasIndex = ((y + j) * atlasSize + (x + k)) * nrChannels;
-
-				for(int channel = 0; channel < nrChannels; channel++){
-					atlas[atlasIndex + channel] = textures[i].data[srcIndex + channel];
-				}
-			}
-		}
-	}
-
-	glGenTextures(1, &id);
-	glBindTexture(GL_TEXTURE_2D, id);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-	if (atlas) {
-
-		GLenum format;
-		if (nrChannels == 1)
-			format = GL_RED;
-		else if (nrChannels == 3)
-			format = GL_RGB;
-		else if (nrChannels == 4)
-			format = GL_RGBA;
-		else {
-			std::cerr << "Unsupported number of channels: " << nrChannels << std::endl;
-			for(auto t: textures){
-				stbi_image_free(t.data);
-			}
-			return;
-		}	
-
-		glTexImage2D(GL_TEXTURE_2D, 0, format, atlasSize,
-		atlasSize, 0, format, GL_UNSIGNED_BYTE, static_cast<const GLvoid*>(atlas));
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
-
-	else {
-		std::cerr << "Error in loading asset" << std::endl;
-	}
-
-	std::string saveFilePath = ATLAS_DIR + std::string("/atlas_output.png");
-	stbi_write_png(saveFilePath.c_str(), atlasSize, atlasSize, nrChannels, atlas, atlasSize * nrChannels);
-	for(auto t: textures){
-		stbi_image_free(t.data);
-	}
-
-	free(atlas);
+Texture::~Texture() {
+	cleanup();
+	freeLoadedTextures();
 }
 
-bool Texture::activateAt(unsigned int unitIndex){
-	GLenum unitEnum = GL_TEXTURE0 + unitIndex;
-	glActiveTexture(unitEnum);
+Texture::Texture(Texture&& other) noexcept
+	: tileSize{std::exchange(other.tileSize, 0)},
+	  width{std::exchange(other.width, 0)},
+	  height{std::exchange(other.height, 0)},
+	  nrChannels{std::exchange(other.nrChannels, 0)},
+	  textures{std::move(other.textures)},
+	  id{std::exchange(other.id, 0)},
+	  texture_unit{std::exchange(other.texture_unit, 0)},
+	  texture_unit_set{std::exchange(other.texture_unit_set, false)} {
+}
 
-	GLenum err = glGetError();
-	if (err != GL_NO_ERROR) {
-		std::cerr << "Failed to activate texture unit " << unitIndex
-				  << " (enum " << std::hex << unitEnum << std::dec
-				  << ") with error: " << std::hex << err << std::dec << "\n";
+Texture& Texture::operator=(Texture&& other) noexcept {
+	if (this != &other) {
+		cleanup();
+		freeLoadedTextures();
+
+		tileSize = std::exchange(other.tileSize, 0);
+		width = std::exchange(other.width, 0);
+		height = std::exchange(other.height, 0);
+		nrChannels = std::exchange(other.nrChannels, 0);
+		textures = std::move(other.textures);
+		id = std::exchange(other.id, 0);
+		texture_unit = std::exchange(other.texture_unit, 0);
+		texture_unit_set = std::exchange(other.texture_unit_set, false);
+	}
+
+	return *this;
+}
+
+bool Texture::setup(const std::string& texturePath) {
+	cleanup();
+	freeLoadedTextures();
+
+	if (!loadTextures(texturePath)) {
+		freeLoadedTextures();
 		return false;
 	}
 
-	glBindTexture(GL_TEXTURE_2D, id);
-	texture_unit = unitIndex;
+	GLint internalFormat = GL_RGBA8;
+	GLenum dataFormat = GL_RGBA;
+	if (!getTextureFormats(nrChannels, internalFormat, dataFormat)) {
+		std::cerr << "Unsupported number of texture channels: " << nrChannels << std::endl;
+		freeLoadedTextures();
+		return false;
+	}
+
+	GLint maxLayers = 0;
+	glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxLayers);
+	if (static_cast<GLint>(textures.size()) > maxLayers) {
+		std::cerr << "Too many texture array layers: " << textures.size()
+				  << ", max supported is " << maxLayers << std::endl;
+		freeLoadedTextures();
+		return false;
+	}
+
+	tileSize = width;
+	glGenTextures(1, &id);
+	if (!id) {
+		std::cerr << "Failed to allocate OpenGL texture array" << std::endl;
+		freeLoadedTextures();
+		return false;
+	}
+
+	glBindTexture(GL_TEXTURE_2D_ARRAY, id);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL,
+		getMinecraftStyleMaxMipmapLevel(tileSize));
+
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, internalFormat, tileSize, tileSize,
+		static_cast<GLsizei>(textures.size()), 0, dataFormat, GL_UNSIGNED_BYTE, nullptr);
+
+	for (const Tex& texture : textures) {
+		const GLint layer = static_cast<GLint>(texture.id);
+		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, tileSize, tileSize, 1,
+			dataFormat, GL_UNSIGNED_BYTE, texture.data);
+	}
+
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+	freeLoadedTextures();
 	return true;
 }
 
-void Texture::loadTextures(const std::string& texturePath){
-	std::vector<fs::path> texturePaths;
-    try {
-        for (const auto& entry : fs::directory_iterator(texturePath)) {
-            if (entry.is_regular_file()) {
-                std::string ext = entry.path().extension().string();
-                std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-                if (ext == ".png") {
-                    texturePaths.push_back(entry.path());
-                }
+bool Texture::loadTextures(const std::string& texturePath) {
+	const fs::path textureDir(texturePath);
+	if (!fs::is_directory(textureDir)) {
+		std::cerr << "Texture directory does not exist: " << texturePath << std::endl;
+		return false;
+	}
 
-				else{
-					std::cerr << "unsupported image type found in the directory: " << 
-					entry.path().filename().string() << std::endl;
-				}
-            }
-        }
-    }
-    catch (const fs::filesystem_error& e) {
-        std::cerr << "Filesystem error: " << e.what() << std::endl;
-        return;
-    }
+	stbi_set_flip_vertically_on_load(true);
 
-    std::sort(texturePaths.begin(), texturePaths.end());
+	for (std::size_t layer = 0; layer < TEXTURE_COUNT; layer++) {
+		const TexMap texId = static_cast<TexMap>(layer);
+		const fs::path path = textureDir / textureFileName(texId);
 
-	texIdType counter = 0;
-	bool firstTexture = true;
-
-	for (auto const& entry : texturePaths) {
-        std::string path = entry.string();
-		std::string name = entry.filename().string();
-	
-		Tex t;
-		t.id = (TexMap) counter;
-		t.data = stbi_load(path.c_str(), &t.width, &t.height, &t.nrChannels, 0);
-		
-		// NOTE: Assumes all png's are of the same SQUARE dimension
-		// Will require a total overhaul and re-write if each image does not satisfy this
-
-		if (firstTexture) {
-			width = t.width;
-			height = t.height;
-			nrChannels = t.nrChannels;
-			if (width != height) {
-				std::cerr << "Error: Base texture " << name << " is not square!" << std::endl;
-				return;
-			}
-			firstTexture = false;
-		}
-			
-		else {
-			if (t.width != width || t.height != height || t.nrChannels != nrChannels) {
-				// NOTE: skipping invalid textures
-				std::cerr << "Error: Texture " << name << " has different dimensions or channels!" << std::endl;
-				continue; 
-			}
+		Tex texture;
+		texture.id = texId;
+		texture.data = stbi_load(path.string().c_str(),
+			&texture.width, &texture.height, &texture.nrChannels, 0);
+		if (!texture.data) {
+			std::cerr << "Could not load texture image for layer " << layer
+					  << ": " << path << std::endl;
+			return false;
 		}
 
-		if (!t.data){
-			std::cerr << "Error could not load file: " << name << std::endl;
+		if (texture.width != texture.height) {
+			std::cerr << "Texture is not square: " << path.filename().string()
+					  << " (" << texture.width << "x" << texture.height << ")" << std::endl;
+			stbi_image_free(texture.data);
+			return false;
 		}
 
-		textures.push_back(t);
-		counter++;
-    }
+		if (textures.empty()) {
+			width = texture.width;
+			height = texture.height;
+			nrChannels = texture.nrChannels;
+		} else if (texture.width != width || texture.height != height ||
+			texture.nrChannels != nrChannels) {
+			std::cerr << "Texture dimensions/channels do not match the first texture: "
+					  << path.filename().string() << std::endl;
+			stbi_image_free(texture.data);
+			return false;
+		}
+
+		textures.push_back(texture);
+	}
+
+	return !textures.empty();
 }
 
+void Texture::freeLoadedTextures() {
+	for (Tex& texture : textures) {
+		if (texture.data) {
+			stbi_image_free(texture.data);
+			texture.data = nullptr;
+		}
+	}
+	textures.clear();
+}
+
+bool Texture::activateAt(unsigned int unitIndex) {
+	if (!id) {
+		std::cerr << "Cannot activate texture, texture array is not loaded" << std::endl;
+		return false;
+	}
+
+	GLint maxUnits = 0;
+	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxUnits);
+	if (unitIndex >= static_cast<unsigned int>(maxUnits)) {
+		std::cerr << "Texture unit " << unitIndex
+				  << " is out of range, max units: " << maxUnits << std::endl;
+		return false;
+	}
+
+	glActiveTexture(GL_TEXTURE0 + unitIndex);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, id);
+	texture_unit = unitIndex;
+	texture_unit_set = true;
+	return true;
+}
 
 unsigned int Texture::getId() const {
 	return id;
 }
 
 unsigned int Texture::getUnit() const {
+	if (!texture_unit_set) {
+		std::cerr << "Texture unit requested before texture activation" << std::endl;
+	}
 	return texture_unit;
+}
+
+bool Texture::isLoaded() const {
+	return id != 0;
 }
 
 void Texture::cleanup() {
@@ -216,20 +240,42 @@ void Texture::cleanup() {
 		glDeleteTextures(1, &id);
 		id = 0;
 	}
+	texture_unit = 0;
+	texture_unit_set = false;
 }
 
-void Texture::set_wrap_s(GLint param){
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, param);
+void Texture::set_wrap_s(GLint param) {
+	if (!id) {
+		std::cerr << "Cannot set texture wrap S, texture array is not loaded" << std::endl;
+		return;
+	}
+	glBindTexture(GL_TEXTURE_2D_ARRAY, id);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, param);
 }
 
-void Texture::set_wrap_t(GLint param){
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, param);
+void Texture::set_wrap_t(GLint param) {
+	if (!id) {
+		std::cerr << "Cannot set texture wrap T, texture array is not loaded" << std::endl;
+		return;
+	}
+	glBindTexture(GL_TEXTURE_2D_ARRAY, id);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, param);
 }
 
-void Texture::set_mag_filter(GLint param){
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+void Texture::set_mag_filter(GLint param) {
+	if (!id) {
+		std::cerr << "Cannot set texture mag filter, texture array is not loaded" << std::endl;
+		return;
+	}
+	glBindTexture(GL_TEXTURE_2D_ARRAY, id);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, param);
 }
 
-void Texture::set_min_filter(GLint param){
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+void Texture::set_min_filter(GLint param) {
+	if (!id) {
+		std::cerr << "Cannot set texture min filter, texture array is not loaded" << std::endl;
+		return;
+	}
+	glBindTexture(GL_TEXTURE_2D_ARRAY, id);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, param);
 }

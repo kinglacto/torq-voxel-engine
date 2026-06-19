@@ -1,0 +1,2 @@
+/usr/bin/ar qc libnoise.a CMakeFiles/noise.dir/src/Noise.cpp.o
+/usr/bin/ranlib libnoise.a

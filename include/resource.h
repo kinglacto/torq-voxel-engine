@@ -5,13 +5,19 @@
 
 #include <shader.h>
 #include <texture.h>
-#include <bits/stdc++.h>
+#include <string>
+#include <unordered_map>
 
 class ResourceManager{
 public:
     using ResourceID = int;
 
-    ResourceManager() = default;
+    ResourceManager() = delete;
+    ResourceManager(const ResourceManager&) = delete;
+    ResourceManager& operator=(const ResourceManager&) = delete;
+    ResourceManager(ResourceManager&&) = delete;
+    ResourceManager& operator=(ResourceManager&&) = delete;
+
     static Shader* LoadShader(const std::string& vPath, const std::string& fPath, ResourceID id);
     static Shader* GetShader(ResourceID id);
     static void DeleteShader(ResourceID id);
@@ -26,8 +32,6 @@ public:
     static void deleteAll();
 
 private:
-    static ResourceID HashName(ResourceID id);
-
     static std::unordered_map<ResourceID, Shader> shaders;
     static std::unordered_map<ResourceID, Texture> textures;
 };

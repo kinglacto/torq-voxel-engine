@@ -1,23 +1,27 @@
-//
-// Created by yashas on 6/26/25.
-//
-
 #pragma once
 
-#include <vector>
-#include <thread>
+#include <atomic>
+#include <cstddef>
 #include <functional>
+#include <thread>
+#include <vector>
+
 #include "thread_safe_queue.h"
 
 class ThreadPool {
 public:
-    explicit ThreadPool(size_t numThreads);
-    ~ThreadPool();
-    void submit(std::function<void()> job);
+	explicit ThreadPool(std::size_t numThreads);
+	~ThreadPool();
+
+	ThreadPool(const ThreadPool&) = delete;
+	ThreadPool& operator=(const ThreadPool&) = delete;
+
+	bool submit(std::function<void()> job);
 
 private:
-    void worker_loop();
+	void worker_loop();
 
-    std::vector<std::thread> workers;
-    ThreadSafeQueue<std::function<void()>> job_queue;
+	std::atomic<bool> accepting_jobs{true};
+	std::vector<std::thread> workers;
+	ThreadSafeQueue<std::function<void()>> job_queue;
 };

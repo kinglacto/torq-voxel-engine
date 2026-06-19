@@ -3,14 +3,14 @@
 Camera::Camera(glm::vec3 position)
     : zoom(45.0f), cameraPos(position), cameraFront(glm::vec3(0.0f, 0.0f, -1.0f)),
     cameraUp{glm::vec3(0.0f, 1.0f, 0.0f)}, cameraRight{glm::vec3(1.0f, 0.0f, 0.0f)}, 
-    worldUp{glm::vec3(0.0f, 1.0f, 0.0f)}, yaw{-90.0f}, pitch{0.0f}, sensitivity{18.0f}, 
-    speed{8000.0f}, znear{1.0f}, zfar{4000.0f}, deltaTime{0} {
+    worldUp{glm::vec3(0.0f, 1.0f, 0.0f)}, yaw{-90.0f}, pitch{0.0f}, sensitivity{0.12f}, 
+    speed{90.0f}, znear{0.1f}, zfar{4000.0f}, deltaTime{0} {
     updateCameraVectors();
 }
 
 void Camera::updateCameraDirection(double dx, double dy) {
-    yaw += sensitivity * deltaTime * dx;
-    pitch += sensitivity * deltaTime * dy;
+    yaw += sensitivity * dx;
+    pitch += sensitivity * dy;
 
     if (pitch > 89.0f) {
         pitch = 89.0f;
@@ -21,9 +21,10 @@ void Camera::updateCameraDirection(double dx, double dy) {
     }
 
 
+    updateCameraVectors();
 }
 void Camera::updateCameraPos(cameraDirection dir, float dt) {
-    float dist = dt * speed * deltaTime;
+    float dist = speed * dt;
     switch (dir) {
         case cameraDirection::FORWARD: {
             cameraPos += cameraFront * dist;

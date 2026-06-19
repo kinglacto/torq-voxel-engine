@@ -1,0 +1,117 @@
+[
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/main.cpp.o -c /home/yashas/Torq/Torq/main.cpp",
+  "file": "/home/yashas/Torq/Torq/main.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/IO/camera.cpp.o -c /home/yashas/Torq/Torq/src/IO/camera.cpp",
+  "file": "/home/yashas/Torq/Torq/src/IO/camera.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/IO/keyboard.cpp.o -c /home/yashas/Torq/Torq/src/IO/keyboard.cpp",
+  "file": "/home/yashas/Torq/Torq/src/IO/keyboard.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/IO/mouse.cpp.o -c /home/yashas/Torq/Torq/src/IO/mouse.cpp",
+  "file": "/home/yashas/Torq/Torq/src/IO/mouse.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/IO/screen.cpp.o -c /home/yashas/Torq/Torq/src/IO/screen.cpp",
+  "file": "/home/yashas/Torq/Torq/src/IO/screen.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/generate_data.cpp.o -c /home/yashas/Torq/Torq/src/generate_data.cpp",
+  "file": "/home/yashas/Torq/Torq/src/generate_data.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/graphics/material.cpp.o -c /home/yashas/Torq/Torq/src/graphics/material.cpp",
+  "file": "/home/yashas/Torq/Torq/src/graphics/material.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/graphics/mesh.cpp.o -c /home/yashas/Torq/Torq/src/graphics/mesh.cpp",
+  "file": "/home/yashas/Torq/Torq/src/graphics/mesh.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/graphics/model.cpp.o -c /home/yashas/Torq/Torq/src/graphics/model.cpp",
+  "file": "/home/yashas/Torq/Torq/src/graphics/model.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/graphics/models/cube.cpp.o -c /home/yashas/Torq/Torq/src/graphics/models/cube.cpp",
+  "file": "/home/yashas/Torq/Torq/src/graphics/models/cube.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/graphics/shader.cpp.o -c /home/yashas/Torq/Torq/src/graphics/shader.cpp",
+  "file": "/home/yashas/Torq/Torq/src/graphics/shader.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/graphics/texture.cpp.o -c /home/yashas/Torq/Torq/src/graphics/texture.cpp",
+  "file": "/home/yashas/Torq/Torq/src/graphics/texture.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o -c /home/yashas/Torq/Torq/src/resources/chunk_cache.cpp",
+  "file": "/home/yashas/Torq/Torq/src/resources/chunk_cache.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o -c /home/yashas/Torq/Torq/src/resources/chunk_mesh.cpp",
+  "file": "/home/yashas/Torq/Torq/src/resources/chunk_mesh.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o -c /home/yashas/Torq/Torq/src/resources/chunk_renderer.cpp",
+  "file": "/home/yashas/Torq/Torq/src/resources/chunk_renderer.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/resources/chunk_worker.cpp.o -c /home/yashas/Torq/Torq/src/resources/chunk_worker.cpp",
+  "file": "/home/yashas/Torq/Torq/src/resources/chunk_worker.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/resources/region_store.cpp.o -c /home/yashas/Torq/Torq/src/resources/region_store.cpp",
+  "file": "/home/yashas/Torq/Torq/src/resources/region_store.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/resources/resource.cpp.o -c /home/yashas/Torq/Torq/src/resources/resource.cpp",
+  "file": "/home/yashas/Torq/Torq/src/resources/resource.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/resources/thread_pool.cpp.o -c /home/yashas/Torq/Torq/src/resources/thread_pool.cpp",
+  "file": "/home/yashas/Torq/Torq/src/resources/thread_pool.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/worldgen/worldgen.cpp.o -c /home/yashas/Torq/Torq/src/worldgen/worldgen.cpp",
+  "file": "/home/yashas/Torq/Torq/src/worldgen/worldgen.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release/lib/glad",
+  "command": "/usr/bin/cc  -I/home/yashas/Torq/Torq/lib/glad/include -O3 -DNDEBUG -o CMakeFiles/glad.dir/src/glad.c.o -c /home/yashas/Torq/Torq/lib/glad/src/glad.c",
+  "file": "/home/yashas/Torq/Torq/lib/glad/src/glad.c"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release/lib/stb_image",
+  "command": "/usr/bin/c++  -I/home/yashas/Torq/Torq/lib/stb_image/include -O3 -DNDEBUG -o CMakeFiles/stb_image.dir/src/stb_image.cpp.o -c /home/yashas/Torq/Torq/lib/stb_image/src/stb_image.cpp",
+  "file": "/home/yashas/Torq/Torq/lib/stb_image/src/stb_image.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release/lib/noise",
+  "command": "/usr/bin/c++  -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -o CMakeFiles/noise.dir/src/Noise.cpp.o -c /home/yashas/Torq/Torq/lib/noise/src/Noise.cpp",
+  "file": "/home/yashas/Torq/Torq/lib/noise/src/Noise.cpp"
+}
+]

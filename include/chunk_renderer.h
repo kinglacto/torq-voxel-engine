@@ -1,69 +1,78 @@
 #pragma once
 
-#include <map>
-#include <queue>
-#include <memory>
-#include "active_chunk.h"
-#include "chunk_loader.h"
 #include "chunk_mesh.h"
-#include "shader.h"
-#include "texture.h"
-#include "block_utility.h"
-#include "thread_safe_queue.h"
-#include "worldgen.hpp"
+
+#include <array>
+#include <cstdint>
+
 #include <glm/glm.hpp>
-#include <mutex>
-#include <condition_variable>
 
-class ChunkRenderer{
-public:
-    glm::vec3 worldPos;
-    Texture* texture;
+namespace torq {
 
-    int renderDistance {10};
-    int activeRadius {5};
+using MeshId = std::uint32_t;
 
-    std::mutex world_pos_mutex;
+inline constexpr MeshId INVALID_MESH = UINT32_MAX;
+inline constexpr std::uint32_t MAX_CHUNK_MESHES = MAX_CHUNK_SLOTS;
+inline constexpr std::uint32_t MAX_MESH_INDEX_ENTRIES = MAX_CHUNK_INDEX_ENTRIES;
 
-    std::unordered_set<std::pair<int, int>, PairHash> pendingChunkRequests;
-    std::unordered_set<std::pair<int, int>, PairHash> pendingRegionGenerations;
-
-    std::map<std::pair<int, int>, std::shared_ptr<ChunkMesh>> chunkMeshes;
-    std::map<std::pair<int, int>, std::shared_ptr<ActiveChunk>> activeChunks;
-    std::shared_ptr<ChunkLoader> chunkLoader;
-
-    std::queue<std::pair<std::shared_ptr<ChunkMesh>, std::shared_ptr<ChunkData>>> ChunkMeshQueue;
-    std::queue<std::shared_ptr<ActiveChunk>> ActiveChunkRemeshQueue;
-
-    void deleteActiveChunk(const std::pair<int, int>& chunk_coords);
-    void deleteActiveChunk(std::shared_ptr<ActiveChunk> activeChunk);
-
-    void deleteChunkMesh(const std::pair<int, int>& chunk_coords);
-    void deleteChunkMesh(ChunkMesh* chunkMesh);
-
-    void makeChunkMesh(const std::pair<int, int>& chunk_coords, 
-    std::shared_ptr<ChunkData> chunkData);
-    void makeChunkActive(const std::pair<int, int>& chunk_coords, 
-    std::shared_ptr<ChunkData> chunkData);
-
-    void makeChunkActiveRequest(const std::pair<int, int>& chunk_coords);
-    void makeChunkMeshRequest(const std::pair<int, int>& chunk_coords);
-
-    ChunkErrorCode generateStaticMesh(std::shared_ptr<ChunkMesh>& mesh,
-        std::shared_ptr<ChunkData>& it);
-    ChunkErrorCode generateActiveMesh(std::shared_ptr<ActiveChunk>& activeChunk);
-
-    ChunkErrorCode generateVertices(ChunkData* chunkData, std::vector<TextureVertex>& vertices);
-
-    static void getRegionCoordsFromChunkCoords(int chunk_x, int chunk_z, int* region_x, int* region_z);
-    static void getChunkCoordsFromWorldCoords(int world_x, int world_z, int* chunk_x, int* chunk_z);
-    void getRegionCoordsFromWorldCoords(int world_x, int world_z, int* region_x, int* region_z);
-
-    void updateMeshes();
-    void render(Shader* shader);
-
-    void setWorldPos(glm::vec3 worldPos);
-
-    void update();
-    void cleanup();
+struct ChunkMeshIndexEntry {
+    ChunkCoord coord{};
+    MeshId mesh{INVALID_MESH};
+    IndexState state{IndexState::Empty};
 };
+
+struct ChunkMeshPool {
+    std::array<ChunkMesh, MAX_CHUNK_MESHES> meshes{};
+    std::array<ChunkCoord, MAX_CHUNK_MESHES> mesh_coords{};
+    std::array<MeshId, MAX_CHUNK_MESHES> free_stack{};
+    std::uint32_t free_count{0};
+
+    std::array<MeshId, MAX_CHUNK_MESHES> live_meshes{};
+    std::uint32_t live_count{0};
+};
+
+struct ChunkMeshIndex {
+    std::array<ChunkMeshIndexEntry, MAX_MESH_INDEX_ENTRIES> entries{};
+    std::uint32_t occupied_count{0};
+    std::uint32_t tombstone_count{0};
+};
+
+struct ChunkRendererStorage {
+    ChunkMeshPool pool{};
+    ChunkMeshIndex index{};
+};
+
+struct ChunkFrustum {
+    std::array<glm::vec4, 6> planes{};
+};
+
+[[nodiscard]] ChunkFrustum makeChunkFrustum(const glm::mat4& view_projection) noexcept;
+
+class ChunkRenderer {
+public:
+    ChunkRenderer();
+    ~ChunkRenderer();
+
+    ChunkRenderer(const ChunkRenderer&) = delete;
+    ChunkRenderer& operator=(const ChunkRenderer&) = delete;
+
+    ChunkRenderer(ChunkRenderer&&) noexcept = default;
+    ChunkRenderer& operator=(ChunkRenderer&&) noexcept = default;
+
+    void initialize();
+    void shutdown() noexcept;
+
+    [[nodiscard]] bool uploadMesh(ChunkCoord coord,
+                                  std::uint64_t revision,
+                                  CpuChunkMesh&& mesh);
+    void deleteMesh(ChunkCoord coord) noexcept;
+    void draw(Shader* shader) const;
+    void draw(Shader* shader, const ChunkFrustum& frustum) const;
+
+    [[nodiscard]] const ChunkRendererStorage& storage() const noexcept;
+
+private:
+    ChunkRendererStorage storage_{};
+};
+
+} // namespace torq

@@ -1,5 +1,7 @@
 #include <resource.h>
 
+#include <iostream>
+
 std::unordered_map<ResourceManager::ResourceID, Shader> ResourceManager::shaders;
 std::unordered_map<ResourceManager::ResourceID, Texture> ResourceManager::textures;
 
@@ -64,22 +66,18 @@ void ResourceManager::DeleteTexture(ResourceManager::ResourceID id){
     textures.erase(it);
 }
 
-void ResourceManager::deleteAllShaders()
-{
-    for (auto& [fst, snd] : shaders)
-    {
-        snd.cleanup();
-        shaders.erase(fst);
+void ResourceManager::deleteAllShaders() {
+    for (auto& [_, shader] : shaders) {
+        shader.cleanup();
     }
+    shaders.clear();
 }
 
-void ResourceManager::deleteAllTextures()
-{
-    for (auto& [fst, snd] : textures)
-    {
-        snd.cleanup();
-        textures.erase(fst);
+void ResourceManager::deleteAllTextures() {
+    for (auto& [_, texture] : textures) {
+        texture.cleanup();
     }
+    textures.clear();
 }
 
 void ResourceManager::deleteAll() {

@@ -1,25 +1,61 @@
+#include <cstddef>
 #include <mesh.h>
 #include <utility>
 
-PrimitiveMesh::PrimitiveMesh(std::vector<PrimitiveVertex>& vertices)
-    : vertices{std::move(vertices)}, VAO{0}, VBO{0}, EBO{0} {
-    setup();
-}
-
-PrimitiveMesh::PrimitiveMesh(std::vector<PrimitiveVertex>& vertices,
-	std::vector<unsigned int>& indices): 
-	vertices{std::move(vertices)}, indices{std::move(indices)}, VAO{0}, VBO{0}, EBO{0} {
-	elementDraw = true;
+PrimitiveMesh::PrimitiveMesh(std::vector<PrimitiveVertex>&& vertices)
+	: vertices{std::move(vertices)} {
 	setup();
 }
 
+PrimitiveMesh::PrimitiveMesh(std::vector<PrimitiveVertex>&& vertices,
+	std::vector<unsigned int>&& indices)
+	: elementDraw{true}, vertices{std::move(vertices)}, indices{std::move(indices)} {
+	setup();
+}
+
+PrimitiveMesh::~PrimitiveMesh() {
+	cleanup();
+}
+
+PrimitiveMesh::PrimitiveMesh(PrimitiveMesh&& other) noexcept
+	: elementDraw{std::exchange(other.elementDraw, false)},
+	  vertices{std::move(other.vertices)},
+	  indices{std::move(other.indices)},
+	  VAO{std::exchange(other.VAO, 0)},
+	  VBO{std::exchange(other.VBO, 0)},
+	  EBO{std::exchange(other.EBO, 0)},
+	  vertexCount{std::exchange(other.vertexCount, 0)},
+	  indexCount{std::exchange(other.indexCount, 0)} {
+}
+
+PrimitiveMesh& PrimitiveMesh::operator=(PrimitiveMesh&& other) noexcept {
+	if (this != &other) {
+		cleanup();
+		elementDraw = std::exchange(other.elementDraw, false);
+		vertices = std::move(other.vertices);
+		indices = std::move(other.indices);
+		VAO = std::exchange(other.VAO, 0);
+		VBO = std::exchange(other.VBO, 0);
+		EBO = std::exchange(other.EBO, 0);
+		vertexCount = std::exchange(other.vertexCount, 0);
+		indexCount = std::exchange(other.indexCount, 0);
+	}
+
+	return *this;
+}
+
 void PrimitiveMesh::render() const {
+	if (!VAO || vertexCount <= 0) {
+		return;
+	}
+
 	glBindVertexArray(VAO);
 	if (elementDraw) {
-		glDrawElements(GL_TRIANGLES,indices.size(),GL_UNSIGNED_INT, static_cast<void *>(nullptr));
-	}
-	else {
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+		if (indexCount > 0) {
+			glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
+		}
+	} else {
+		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	}
 	glBindVertexArray(0);
 }
@@ -35,65 +71,106 @@ void PrimitiveMesh::cleanup() {
 		VBO = 0;
 	}
 
-	if (elementDraw) {
-		if (EBO) {
-			glDeleteBuffers(1, &EBO);
-			EBO = 0;
-		}
+	if (EBO) {
+		glDeleteBuffers(1, &EBO);
+		EBO = 0;
 	}
+
+	vertexCount = 0;
+	indexCount = 0;
+	elementDraw = false;
 }
 
 void PrimitiveMesh::setup() {
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+	vertexCount = static_cast<int>(vertices.size());
+	indexCount = static_cast<int>(indices.size());
+	if (vertexCount <= 0) {
+		return;
+	}
 
-    glBindVertexArray(VAO);
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(PrimitiveVertex), &vertices[0], GL_STATIC_DRAW);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER,
+		static_cast<GLsizeiptr>(vertices.size() * sizeof(PrimitiveVertex)),
+		vertices.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-    	sizeof(PrimitiveVertex), static_cast<void *>(nullptr));
-    glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(PrimitiveVertex), nullptr);
+	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-		sizeof(PrimitiveVertex), reinterpret_cast<void *>(offsetof(PrimitiveVertex, color)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(PrimitiveVertex),
+		reinterpret_cast<void*>(offsetof(PrimitiveVertex, color)));
 	glEnableVertexAttribArray(1);
 
-	if (elementDraw) {
+	if (elementDraw && indexCount > 0) {
 		glGenBuffers(1, &EBO);
-
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
-			&indices[0], GL_STATIC_DRAW);
-
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+			static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
+			indices.data(), GL_STATIC_DRAW);
 	}
+
+	glBindVertexArray(0);
+	std::vector<PrimitiveVertex>().swap(vertices);
+	std::vector<unsigned int>().swap(indices);
 }
 
-void PrimitiveMesh::setElementDraw(bool flag) {
-	elementDraw = flag;
-}
-
-
-TextureMesh::TextureMesh(std::vector<TextureVertex>& vertices)
-    : vertices{std::move(vertices)}, VAO{0}, VBO{0}, EBO{0} {
-    setup();
-}
-
-TextureMesh::TextureMesh(std::vector<TextureVertex>& vertices,
-	std::vector<unsigned int>& indices): 
-	vertices{std::move(vertices)}, indices{std::move(indices)}, VAO{0}, VBO{0}, EBO{0} {
-	elementDraw = true;
+TextureMesh::TextureMesh(std::vector<TextureVertex>&& vertices)
+	: vertices{std::move(vertices)} {
 	setup();
 }
 
+TextureMesh::TextureMesh(std::vector<TextureVertex>&& vertices,
+	std::vector<unsigned int>&& indices)
+	: elementDraw{true}, vertices{std::move(vertices)}, indices{std::move(indices)} {
+	setup();
+}
+
+TextureMesh::~TextureMesh() {
+	cleanup();
+}
+
+TextureMesh::TextureMesh(TextureMesh&& other) noexcept
+	: elementDraw{std::exchange(other.elementDraw, false)},
+	  vertices{std::move(other.vertices)},
+	  indices{std::move(other.indices)},
+	  VAO{std::exchange(other.VAO, 0)},
+	  VBO{std::exchange(other.VBO, 0)},
+	  EBO{std::exchange(other.EBO, 0)},
+	  vertexCount{std::exchange(other.vertexCount, 0)},
+	  indexCount{std::exchange(other.indexCount, 0)} {
+}
+
+TextureMesh& TextureMesh::operator=(TextureMesh&& other) noexcept {
+	if (this != &other) {
+		cleanup();
+		elementDraw = std::exchange(other.elementDraw, false);
+		vertices = std::move(other.vertices);
+		indices = std::move(other.indices);
+		VAO = std::exchange(other.VAO, 0);
+		VBO = std::exchange(other.VBO, 0);
+		EBO = std::exchange(other.EBO, 0);
+		vertexCount = std::exchange(other.vertexCount, 0);
+		indexCount = std::exchange(other.indexCount, 0);
+	}
+
+	return *this;
+}
+
 void TextureMesh::render() const {
+	if (!VAO || vertexCount <= 0) {
+		return;
+	}
+
 	glBindVertexArray(VAO);
 	if (elementDraw) {
-		glDrawElements(GL_TRIANGLES,indices.size(),GL_UNSIGNED_INT, static_cast<void *>(nullptr));
-	}
-	else {
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+		if (indexCount > 0) {
+			glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
+		}
+	} else {
+		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	}
 	glBindVertexArray(0);
 }
@@ -109,46 +186,56 @@ void TextureMesh::cleanup() {
 		VBO = 0;
 	}
 
-	if (elementDraw) {
-		if (EBO) {
-			glDeleteBuffers(1, &EBO);
-			EBO = 0;
-		}
+	if (EBO) {
+		glDeleteBuffers(1, &EBO);
+		EBO = 0;
 	}
+
+	vertexCount = 0;
+	indexCount = 0;
+	elementDraw = false;
 }
 
 void TextureMesh::setup() {
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+	vertexCount = static_cast<int>(vertices.size());
+	indexCount = static_cast<int>(indices.size());
+	if (vertexCount <= 0) {
+		return;
+	}
 
-    glBindVertexArray(VAO);
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(TextureVertex), &vertices[0], GL_STATIC_DRAW);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER,
+		static_cast<GLsizeiptr>(vertices.size() * sizeof(TextureVertex)),
+		vertices.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-    	sizeof(TextureVertex), static_cast<void *>(nullptr));
-    glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), nullptr);
+	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-		sizeof(TextureVertex), reinterpret_cast<void *>(offsetof(TextureVertex, normal)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
+		reinterpret_cast<void*>(offsetof(TextureVertex, normal)));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
-		sizeof(TextureVertex), reinterpret_cast<void *>(offsetof(TextureVertex, tex)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
+		reinterpret_cast<void*>(offsetof(TextureVertex, tex)));
 	glEnableVertexAttribArray(2);
 
-	if (elementDraw) {
+	glVertexAttribIPointer(3, 1, GL_UNSIGNED_INT, sizeof(TextureVertex),
+		reinterpret_cast<void*>(offsetof(TextureVertex, texLayer)));
+	glEnableVertexAttribArray(3);
+
+	if (elementDraw && indexCount > 0) {
 		glGenBuffers(1, &EBO);
-
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
-			&indices[0], GL_STATIC_DRAW);
-
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+			static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
+			indices.data(), GL_STATIC_DRAW);
 	}
-}
 
-void TextureMesh::setElementDraw(bool flag) {
-	elementDraw = flag;
-
+	glBindVertexArray(0);
+	std::vector<TextureVertex>().swap(vertices);
+	std::vector<unsigned int>().swap(indices);
 }

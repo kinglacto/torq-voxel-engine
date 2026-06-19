@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <array>
 
 class keyboard {
 public:
@@ -13,7 +14,8 @@ public:
     static bool keyWentDown(int key);
 
 private:
-    static bool keys[];
-    static bool keysChanged[];
-};
+    static bool isValidKey(int key);
 
+    static std::array<bool, GLFW_KEY_LAST + 1> keys;
+    static std::array<bool, GLFW_KEY_LAST + 1> keysChanged;
+};

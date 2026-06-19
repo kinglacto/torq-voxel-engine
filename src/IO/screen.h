@@ -5,18 +5,23 @@
 
 class Screen {
 public:
-    static int SCREEN_WIDTH;
-    static int SCREEN_HEIGHT;
-
     static void frameBufferSizeCallback(GLFWwindow*, int width, int height);
-    Screen(int height, int width);
+    Screen(int width, int height);
     bool init();
     void setParameters();
+    void setCursorDisabled(bool disabled);
     
     void newFrame();
 
     bool shouldClose();
     void setShouldClose(bool shouldClose);
+    [[nodiscard]] int getWidth() const;
+    [[nodiscard]] int getHeight() const;
+    [[nodiscard]] float getAspectRatio() const;
 
     GLFWwindow* window;
+
+private:
+    int width;
+    int height;
 };

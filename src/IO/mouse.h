@@ -1,6 +1,7 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
+#include <array>
 
 class mouse {
 public:
@@ -22,12 +23,17 @@ public:
     static bool buttonWentUp(int button);
     static bool buttonWentDown(int button);
 
-    static double lastX;
-    static double lastY;
+    static void resetPosition(GLFWwindow* window);
+    static void resetDeltas();
 
 private:
+    static bool isValidButton(int button);
+
     static double x;
     static double y;
+    static double lastX;
+    static double lastY;
+    static bool initialized;
 
     static double dx;
     static double dy;
@@ -35,6 +41,6 @@ private:
     static double scrollDX;
     static double scrollDY;
 
-    static bool buttons[];
-    static bool buttonsChanged[];
+    static std::array<bool, GLFW_MOUSE_BUTTON_LAST + 1> buttons;
+    static std::array<bool, GLFW_MOUSE_BUTTON_LAST + 1> buttonsChanged;
 };

@@ -18,5 +18,5 @@ void generate_data(){
 
     // --- AIR ---
     // Zero out the air block data just to be safe.
-    blockTexMap[air] = {};
+    blockTexMap[BlockMap::air] = {};
 }

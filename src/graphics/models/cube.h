@@ -4,34 +4,32 @@
 #include <vertex.h>
 #include <texture.h>
 #include <shader.h>
+#include <glm/glm.hpp>
 
 class Cube: public TextureModel {
 protected:
 	glm::vec3 size;
 
-	Shader* shader;
-	Texture* texture;
-
-	std::vector<TextureVertex> vertices;
-	std::vector<unsigned int> indices;
+	Shader* shader{nullptr};
+	Texture* texture{nullptr};
 
 public:
 	glm::vec3 position;
-	glm::mat4 model;
-	Cube(glm::vec3 pos, glm::vec3 size, Shader* shader, Texture* texture);
-	Cube(glm::vec3 pos, glm::vec3 size);
+	glm::mat4 model{1.0f};
+	Cube(const glm::vec3& pos, const glm::vec3& size, Shader* shader, Texture* texture);
+	Cube(const glm::vec3& pos, const glm::vec3& size);
 
-	Cube(glm::vec3 pos, float size, Shader* shader, Texture* texture);
-	Cube(glm::vec3 pos, float size);
+	Cube(const glm::vec3& pos, float size, Shader* shader, Texture* texture);
+	Cube(const glm::vec3& pos, float size);
 
-	~Cube();
-	
+	~Cube() override;
+		
 	void init();
 	void render();
-	
+		
 	bool setSize(float size);
-	bool setSize(glm::vec3 size);
-	void setPosition(glm::vec3 pos);
+	bool setSize(const glm::vec3& size);
+	void setPosition(const glm::vec3& pos);
 	void setShader(Shader* shader);
 	void setTexture(Texture* texture);
 };

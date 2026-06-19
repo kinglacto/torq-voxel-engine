@@ -5,6 +5,7 @@ double mouse::y = 0;
 
 double mouse::lastX = 0;
 double mouse::lastY = 0;
+bool mouse::initialized = false;
 
 double mouse::dx = 0;
 double mouse::dy = 0;
@@ -12,36 +13,47 @@ double mouse::dy = 0;
 double mouse::scrollDX = 0;
 double mouse::scrollDY = 0;
 
-bool mouse::buttons[GLFW_MOUSE_BUTTON_LAST] = {false};
-bool mouse::buttonsChanged[GLFW_MOUSE_BUTTON_LAST] = {false};
+std::array<bool, GLFW_MOUSE_BUTTON_LAST + 1> mouse::buttons{};
+std::array<bool, GLFW_MOUSE_BUTTON_LAST + 1> mouse::buttonsChanged{};
 
 void mouse::cursorPosCallBack(GLFWwindow* window, double _x, double _y) {
+    (void) window;
+
+    if (!initialized) {
+        x = _x;
+        y = _y;
+        lastX = _x;
+        lastY = _y;
+        initialized = true;
+        return;
+    }
+
     x = _x;
     y = _y;
 
-    dx = x - lastX;
-    dy = lastY - y;
+    dx += x - lastX;
+    dy += lastY - y;
     lastX = x;
     lastY = y;
 }
 
 void mouse::mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods) {
-    if (action != GLFW_RELEASE) {
-        if (!buttons[button]) {
-            buttons[button] = true;
-        }
+    (void) window;
+    (void) mods;
+
+    if (!isValidButton(button)) {
+        return;
     }
 
-    else {
-        buttons[button] = false;
-    }
-
+    buttons[button] = action != GLFW_RELEASE;
     buttonsChanged[button] = action != GLFW_REPEAT;
 }
 
-void mouse::mouseWheelCallBack(GLFWwindow* window, double dx, double dy) {
-    scrollDX = dx;
-    scrollDY = dy;
+void mouse::mouseWheelCallBack(GLFWwindow* window, double _dx, double _dy) {
+    (void) window;
+
+    scrollDX += _dx;
+    scrollDY += _dy;
 }
 
 double mouse::getMouseX() {
@@ -77,18 +89,57 @@ double mouse::getScrollDY() {
 }
 
 bool mouse::button(int button) {
+    if (!isValidButton(button)) {
+        return false;
+    }
+
     return buttons[button];
 }
 
 bool mouse::buttonChanged(int button) {
+    if (!isValidButton(button)) {
+        return false;
+    }
+
     bool ret = buttonsChanged[button];
     buttonsChanged[button] = false;
     return ret;
 }
 
 bool mouse::buttonWentUp(int button) {
+    if (!isValidButton(button)) {
+        return false;
+    }
+
     return !buttons[button] && buttonChanged(button);
 }
 bool mouse::buttonWentDown(int button) {
+    if (!isValidButton(button)) {
+        return false;
+    }
+
     return buttons[button] && buttonChanged(button);
+}
+
+void mouse::resetPosition(GLFWwindow* window) {
+    if (!window) {
+        return;
+    }
+
+    glfwGetCursorPos(window, &x, &y);
+    lastX = x;
+    lastY = y;
+    initialized = true;
+    resetDeltas();
+}
+
+void mouse::resetDeltas() {
+    dx = 0;
+    dy = 0;
+    scrollDX = 0;
+    scrollDY = 0;
+}
+
+bool mouse::isValidButton(const int button) {
+    return button >= 0 && button <= GLFW_MOUSE_BUTTON_LAST;
 }

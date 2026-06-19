@@ -1,41 +1,50 @@
 #pragma once
 
 #include <glad/glad.h>
-#include <stb_image.h>
-#include <iostream>
-#include <map>
+
+#include <string>
 #include <vector>
-#include <glm/glm.hpp>
+
 #include "texture_utility.h"
 
-struct Tex{
-	TexMap id;
-	int width, height, nrChannels;
+struct Tex {
+	TexMap id{};
+	int width{0};
+	int height{0};
+	int nrChannels{0};
 	unsigned char* data{nullptr};
 };
 
 class Texture {
 private:
-	int tileSize;
-	int tilesPerRow;
-	int atlasSize;
+	int tileSize{0};
+	int width{0};
+	int height{0};
+	int nrChannels{0};
 
-	int width, height, nrChannels;
-public:
-	std::map<TexMap, glm::vec4> uvMap;
-
-private:
 	std::vector<Tex> textures;
-	unsigned int id;
-	unsigned int texture_unit;
-	void setup(const std::string& texturePath);
-	void loadTextures(const std::string& texturePath);
+	GLuint id{0};
+	unsigned int texture_unit{0};
+	bool texture_unit_set{false};
+
+	bool setup(const std::string& texturePath);
+	bool loadTextures(const std::string& texturePath);
+	void freeLoadedTextures();
+
 public:
-	Texture(const std::string& texturePath);
+	Texture() = default;
+	explicit Texture(const std::string& texturePath);
 	~Texture();
+
+	Texture(const Texture&) = delete;
+	Texture& operator=(const Texture&) = delete;
+	Texture(Texture&& other) noexcept;
+	Texture& operator=(Texture&& other) noexcept;
+
 	bool activateAt(unsigned int unit);
 	[[nodiscard]] unsigned int getId() const;
 	[[nodiscard]] unsigned int getUnit() const;
+	[[nodiscard]] bool isLoaded() const;
 	void cleanup();
 
 	void set_wrap_s(GLint param);

@@ -16,13 +16,27 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 add_subdirectory(lib/glad)
 add_subdirectory(lib/glm)
 add_subdirectory(lib/stb_image)
-add_subdirectory(lib/glfw)
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/lib/glfw/CMakeLists.txt")
+    add_subdirectory(lib/glfw)
+    set(TORQ_GLFW_TARGET glfw)
+else()
+    find_package(glfw3 QUIET)
+    if (TARGET glfw)
+        set(TORQ_GLFW_TARGET glfw)
+    elseif (TARGET glfw3)
+        set(TORQ_GLFW_TARGET glfw3)
+    else()
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(GLFW3 REQUIRED IMPORTED_TARGET glfw3)
+        set(TORQ_GLFW_TARGET PkgConfig::GLFW3)
+    endif()
+endif()
 add_subdirectory(lib/noise)
 
-if (BUILD_TYPE STREQUAL "Debug")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Building in Debug Mode")
     add_definitions(-DDEBUG_MODE)
-elseif(BUILD_TYPE STREQUAL "Test")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Test")
     message(STATUS "Building in Test mode")
     add_definitions(-DTEST_MODE)
 else()
@@ -32,14 +46,20 @@ endif()
 
 file(MAKE_DIRECTORY cache/chunks)
 file(MAKE_DIRECTORY cache/maps)
+file(MAKE_DIRECTORY assets/atlas)
+file(MAKE_DIRECTORY assets/chunks)
 
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 add_executable(torq
         main.cpp
         ${MY_SOURCES}
+        include/chunk_cache.h
+        include/chunk_mesh.h
+        include/chunk_renderer.h
+        include/chunk_streaming.h
+        include/region_store.h
         include/torq_utility.h
         include/thread_pool.h
-        src/resources/thread_pool.cpp
 )
 
 set_target_properties(torq
@@ -57,7 +77,7 @@ target_compile_definitions(torq PRIVATE CACHE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/c
 target_compile_definitions(torq PRIVATE CHUNKS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/chunks")
 target_link_libraries(torq PRIVATE
     OpenGL::GL
-    glfw
+    ${TORQ_GLFW_TARGET}
     glad
     glm
     stb_image

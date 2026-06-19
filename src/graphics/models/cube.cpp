@@ -1,36 +1,47 @@
 #include "cube.h"
 #include <iostream>
+#include <utility>
+#include <vector>
+#include <glm/gtc/matrix_transform.hpp>
 
-Cube::Cube(const glm::vec3 pos, const glm::vec3 size, Shader* shader, Texture* texture):
+Cube::Cube(const glm::vec3& pos, const glm::vec3& size, Shader* shader, Texture* texture):
 	size(size), position(pos), shader(shader), texture(texture) {
 }
 
-Cube::Cube(const glm::vec3 pos, const glm::vec3 size) :
-	size(size), position(pos), shader{nullptr}, texture{nullptr}{
+Cube::Cube(const glm::vec3& pos, const glm::vec3& size) :
+	size(size), position(pos) {
 }
 
-Cube::Cube(const glm::vec3 pos, const float size, Shader* shader, Texture* texture):
+Cube::Cube(const glm::vec3& pos, const float size, Shader* shader, Texture* texture):
 	size(glm::vec3(size)), position(pos), shader(shader), texture(texture) {
 }
 
-Cube::Cube(const glm::vec3 pos, const float size) :
-	size(glm::vec3(size)), position(pos), shader{nullptr}, texture{nullptr}{
+Cube::Cube(const glm::vec3& pos, const float size) :
+	size(glm::vec3(size)), position(pos) {
 }
 
 Cube::~Cube() = default;
 
 void Cube::init() {
 	model = glm::mat4(1.0f);
-	int noVertices = 36;
-	glm::vec4 a = texture->uvMap[TexMap::side_dirt];
-	float bu = a.x;
-	float bv = a.y;
+	if (!shader) {
+		std::cerr << "Failed to initialize the cube, shader is NULL" << std::endl;
+		return;
+	}
 
-	float cu = a.z;
-	float cv = a.w;
+	if (!texture) {
+		std::cerr << "Failed to initialize the cube, texture is NULL" << std::endl;
+		return;
+	}
 
-	float width = cu - bu;
-	float height = cv - bv;
+	if (!isValidTextureId(TexMap::side_dirt)) {
+		std::cerr << "Failed to initialize the cube, side_dirt texture id is invalid" << std::endl;
+		return;
+	}
+
+	cleanup();
+
+	constexpr int noVertices = 36;
 
     float v[] = {
 			// as seen down onto the x-z plane
@@ -84,15 +95,21 @@ void Cube::init() {
             -0.5f,  0.5f, -0.5f,     0.0f,  1.0f,  0.0f,    0.0f, 1.0f
     };
 
-	vertices.resize(noVertices);
+	std::vector<TextureVertex> vertices(noVertices);
+	if (!texture->activateAt(0)) {
+		std::cerr << "Failed to initialize the cube, texture activation failed" << std::endl;
+		return;
+	}
+	shader->activate();
     shader->setInt("texture1", texture->getUnit());
 	for (int i = 0; i < noVertices; i++) {
 		int base = i * 8;
 		vertices[i].pos   = glm::vec3(v[base], v[base+1], v[base+2]);
 		vertices[i].normal = glm::vec3(v[base+3], v[base+4], v[base+5]);
-		vertices[i].tex = glm::vec2(bu + v[base+6] * width, bv + v[base + 7] * height);
+		vertices[i].tex = glm::vec2(v[base+6], v[base + 7]);
+		vertices[i].texLayer = static_cast<textureLayerType>(TexMap::side_dirt);
 	}
-	meshes.push_back(TextureMesh(vertices));
+	meshes.emplace_back(std::move(vertices));
 }
 
 
@@ -102,11 +119,12 @@ void Cube::render() {
 		return;
 	}
 
-    if (!texture) {
+	if (!texture) {
 		std::cerr << "Failed to render the cube, texture is NULL" << std::endl;
 		return;
 	}
 
+	shader->activate();
 	model = glm::translate(glm::mat4(1.0f), position) * glm::scale(glm::mat4(1.0f), size);
 	shader->setMat4("model", model);
 
@@ -130,7 +148,7 @@ bool Cube::setSize(const float size) {
 	return false;
 }
 
-bool Cube::setSize(const glm::vec3 size) {
+bool Cube::setSize(const glm::vec3& size) {
 	if (size.x > 0.0f && size.y > 0.0f && size.z > 0.0f) {
 		Cube::size = size;
 		return true;
@@ -139,6 +157,6 @@ bool Cube::setSize(const glm::vec3 size) {
 	return false;
 }
 
-void Cube::setPosition(const glm::vec3 pos) {
+void Cube::setPosition(const glm::vec3& pos) {
 	position = pos;
 }

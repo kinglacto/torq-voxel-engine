@@ -14,6 +14,5 @@ public:
 
     Noise(seed_t _seed, double _frequency, uint32_t _octaves, size_t size_x, size_t size_y);
     Noise() = default;
-    float get2D(size_t x, size_t y);
+    float get2D(double x, double y);
 };
-

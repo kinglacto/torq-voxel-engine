@@ -1,4 +1,5 @@
 #include "chunk_utility.h"
+#include <algorithm>
 #include <cstdint>
 #include <worldgen.hpp>
 #include <stb_image_write.h>
@@ -17,9 +18,9 @@ void WorldGen::setMasterSeed(seed_t _masterSeed) {
     seed_t eSeed  = std::rand();
     seed_t pvSeed = std::rand();
 
-    cNoise   = Noise(cSeed,  cSeed  % 20, cSeed  % 10, BLOCKS_PER_REGION_SIDE, BLOCKS_PER_REGION_SIDE);
-    eNoise   = Noise(eSeed,  eSeed  % 20, eSeed  % 10, BLOCKS_PER_REGION_SIDE, BLOCKS_PER_REGION_SIDE);
-    pvNoise  = Noise(pvSeed, pvSeed % 20, pvSeed % 10, BLOCKS_PER_REGION_SIDE, BLOCKS_PER_REGION_SIDE);
+    cNoise   = Noise(cSeed,  5.0, 4, BLOCKS_PER_REGION_SIDE, BLOCKS_PER_REGION_SIDE);
+    eNoise   = Noise(eSeed,  18.0, 3, BLOCKS_PER_REGION_SIDE, BLOCKS_PER_REGION_SIDE);
+    pvNoise  = Noise(pvSeed, 36.0, 2, BLOCKS_PER_REGION_SIDE, BLOCKS_PER_REGION_SIDE);
 }
 
 float WorldGen::getHeight(long x, long z) {
@@ -27,15 +28,8 @@ float WorldGen::getHeight(long x, long z) {
     float eValue  = eNoise.get2D(x, z);
     float pvValue = pvNoise.get2D(x, z);
 
-    float finalValue;
-    if (cValue < 0.3f)
-        finalValue = 0.1f * cValue;
-    else if (cValue < 0.6f)
-        finalValue = 0.8f * cValue + 0.3f * 0.1f;
-    else
-        finalValue = 0.05f * cValue + 0.8f * 0.6f;
-
-    return finalValue;
+    float finalValue = 0.30f + 0.38f * cValue + 0.10f * eValue + 0.04f * pvValue;
+    return std::clamp(finalValue, 0.15f, 0.90f);
 }
 
 void WorldGen::generateRegion(RHeightMap* regionHM, RegionData* regionData) {
@@ -53,8 +47,8 @@ void WorldGen::generateRegion(RHeightMap* regionHM, RegionData* regionData) {
             long localX = MathMod(x, static_cast<long>(BLOCK_X_SIZE));
             long localZ = MathMod(z, static_cast<long>(BLOCK_Z_SIZE));
             int surfaceHeight = static_cast<int>(noise * BLOCK_Y_SIZE);
-            regionData->chunks[chunkX][chunkZ].x = chunkX;
-            regionData->chunks[chunkX][chunkZ].z = chunkZ;
+            regionData->chunks[chunkX][chunkZ].x = regionHM->rx * CHUNKS_PER_REGION_SIDE + chunkX;
+            regionData->chunks[chunkX][chunkZ].z = regionHM->rz * CHUNKS_PER_REGION_SIDE + chunkZ;
             for (long y = 0; y < BLOCK_Y_SIZE; y++)
                 regionData->chunks[chunkX][chunkZ].blocks[y][localX][localZ] = y > surfaceHeight ? Air : Stone;
         }

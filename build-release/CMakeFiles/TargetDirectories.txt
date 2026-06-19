@@ -1,0 +1,14 @@
+/home/yashas/Torq/Torq/build-release/CMakeFiles/torq.dir
+/home/yashas/Torq/Torq/build-release/CMakeFiles/edit_cache.dir
+/home/yashas/Torq/Torq/build-release/CMakeFiles/rebuild_cache.dir
+/home/yashas/Torq/Torq/build-release/lib/glad/CMakeFiles/glad.dir
+/home/yashas/Torq/Torq/build-release/lib/glad/CMakeFiles/edit_cache.dir
+/home/yashas/Torq/Torq/build-release/lib/glad/CMakeFiles/rebuild_cache.dir
+/home/yashas/Torq/Torq/build-release/lib/glm/CMakeFiles/edit_cache.dir
+/home/yashas/Torq/Torq/build-release/lib/glm/CMakeFiles/rebuild_cache.dir
+/home/yashas/Torq/Torq/build-release/lib/stb_image/CMakeFiles/stb_image.dir
+/home/yashas/Torq/Torq/build-release/lib/stb_image/CMakeFiles/edit_cache.dir
+/home/yashas/Torq/Torq/build-release/lib/stb_image/CMakeFiles/rebuild_cache.dir
+/home/yashas/Torq/Torq/build-release/lib/noise/CMakeFiles/noise.dir
+/home/yashas/Torq/Torq/build-release/lib/noise/CMakeFiles/edit_cache.dir
+/home/yashas/Torq/Torq/build-release/lib/noise/CMakeFiles/rebuild_cache.dir
