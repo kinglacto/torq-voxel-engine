@@ -20,6 +20,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/yashas/Torq/Torq/src/graphics/models/cube.cpp" "CMakeFiles/torq.dir/src/graphics/models/cube.cpp.o" "gcc" "CMakeFiles/torq.dir/src/graphics/models/cube.cpp.o.d"
   "/home/yashas/Torq/Torq/src/graphics/shader.cpp" "CMakeFiles/torq.dir/src/graphics/shader.cpp.o" "gcc" "CMakeFiles/torq.dir/src/graphics/shader.cpp.o.d"
   "/home/yashas/Torq/Torq/src/graphics/texture.cpp" "CMakeFiles/torq.dir/src/graphics/texture.cpp.o" "gcc" "CMakeFiles/torq.dir/src/graphics/texture.cpp.o.d"
+  "/home/yashas/Torq/Torq/src/physics/player_controller.cpp" "CMakeFiles/torq.dir/src/physics/player_controller.cpp.o" "gcc" "CMakeFiles/torq.dir/src/physics/player_controller.cpp.o.d"
   "/home/yashas/Torq/Torq/src/resources/chunk_cache.cpp" "CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o" "gcc" "CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o.d"
   "/home/yashas/Torq/Torq/src/resources/chunk_mesh.cpp" "CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o" "gcc" "CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o.d"
   "/home/yashas/Torq/Torq/src/resources/chunk_renderer.cpp" "CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o" "gcc" "CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o.d"

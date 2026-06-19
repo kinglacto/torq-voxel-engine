@@ -457,6 +457,30 @@ src/graphics/texture.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/torq.dir/build.make CMakeFiles/torq.dir/src/graphics/texture.cpp.s
 .PHONY : src/graphics/texture.cpp.s
 
+src/physics/player_controller.o: src/physics/player_controller.cpp.o
+.PHONY : src/physics/player_controller.o
+
+# target to build an object file
+src/physics/player_controller.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/torq.dir/build.make CMakeFiles/torq.dir/src/physics/player_controller.cpp.o
+.PHONY : src/physics/player_controller.cpp.o
+
+src/physics/player_controller.i: src/physics/player_controller.cpp.i
+.PHONY : src/physics/player_controller.i
+
+# target to preprocess a source file
+src/physics/player_controller.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/torq.dir/build.make CMakeFiles/torq.dir/src/physics/player_controller.cpp.i
+.PHONY : src/physics/player_controller.cpp.i
+
+src/physics/player_controller.s: src/physics/player_controller.cpp.s
+.PHONY : src/physics/player_controller.s
+
+# target to generate assembly for a file
+src/physics/player_controller.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/torq.dir/build.make CMakeFiles/torq.dir/src/physics/player_controller.cpp.s
+.PHONY : src/physics/player_controller.cpp.s
+
 src/resources/chunk_cache.o: src/resources/chunk_cache.cpp.o
 .PHONY : src/resources/chunk_cache.o
 
@@ -697,6 +721,9 @@ help:
 	@echo "... src/graphics/texture.o"
 	@echo "... src/graphics/texture.i"
 	@echo "... src/graphics/texture.s"
+	@echo "... src/physics/player_controller.o"
+	@echo "... src/physics/player_controller.i"
+	@echo "... src/physics/player_controller.s"
 	@echo "... src/resources/chunk_cache.o"
 	@echo "... src/resources/chunk_cache.i"
 	@echo "... src/resources/chunk_cache.s"

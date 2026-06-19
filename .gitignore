@@ -9,7 +9,6 @@ cache/
 .git/
 torq
 OpenGL
-*.png
 notes/
 /assets/chunks
 /design

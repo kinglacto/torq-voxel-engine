@@ -61,6 +61,11 @@
 },
 {
   "directory": "/home/yashas/Torq/Torq/build-release",
+  "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/physics/player_controller.cpp.o -c /home/yashas/Torq/Torq/src/physics/player_controller.cpp",
+  "file": "/home/yashas/Torq/Torq/src/physics/player_controller.cpp"
+},
+{
+  "directory": "/home/yashas/Torq/Torq/build-release",
   "command": "/usr/bin/c++ -DASSETS_DIR=\\\"/home/yashas/Torq/Torq/assets\\\" -DCACHE_DIR=\\\"/home/yashas/Torq/Torq/cache\\\" -DCHUNKS_DIR=\\\"/home/yashas/Torq/Torq/assets/chunks\\\" -DRELEASE_MODE -I/home/yashas/Torq/Torq/include -I/home/yashas/Torq/Torq/lib/glad/include -I/home/yashas/Torq/Torq/lib/glm/include -I/home/yashas/Torq/Torq/lib/glm -I/home/yashas/Torq/Torq/lib/stb_image/include -I/home/yashas/Torq/Torq/lib/noise/include -O3 -DNDEBUG -std=gnu++20 -o CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o -c /home/yashas/Torq/Torq/src/resources/chunk_cache.cpp",
   "file": "/home/yashas/Torq/Torq/src/resources/chunk_cache.cpp"
 },

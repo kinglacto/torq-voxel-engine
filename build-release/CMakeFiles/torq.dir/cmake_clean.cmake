@@ -25,6 +25,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/torq.dir/src/graphics/shader.cpp.o.d"
   "CMakeFiles/torq.dir/src/graphics/texture.cpp.o"
   "CMakeFiles/torq.dir/src/graphics/texture.cpp.o.d"
+  "CMakeFiles/torq.dir/src/physics/player_controller.cpp.o"
+  "CMakeFiles/torq.dir/src/physics/player_controller.cpp.o.d"
   "CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o"
   "CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o.d"
   "CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o"

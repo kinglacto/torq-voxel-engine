@@ -479,6 +479,7 @@ CMakeFiles/torq.dir/main.cpp.o: /home/yashas/Torq/Torq/main.cpp \
  /usr/include/c++/11/bits/ranges_uninitialized.h \
  /usr/include/c++/11/bits/uses_allocator_args.h \
  /usr/include/c++/11/pstl/glue_memory_defs.h /usr/include/c++/11/span \
+ /home/yashas/Torq/Torq/include/player_controller.h \
  /home/yashas/Torq/Torq/include/chunk_renderer.h \
  /home/yashas/Torq/Torq/include/chunk_mesh.h \
  /home/yashas/Torq/Torq/include/chunk_worker.h \

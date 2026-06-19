@@ -237,10 +237,24 @@ CMakeFiles/torq.dir/src/graphics/texture.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/torq.dir/src/graphics/texture.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/yashas/Torq/Torq/src/graphics/texture.cpp -o CMakeFiles/torq.dir/src/graphics/texture.cpp.s
 
+CMakeFiles/torq.dir/src/physics/player_controller.cpp.o: CMakeFiles/torq.dir/flags.make
+CMakeFiles/torq.dir/src/physics/player_controller.cpp.o: ../src/physics/player_controller.cpp
+CMakeFiles/torq.dir/src/physics/player_controller.cpp.o: CMakeFiles/torq.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/torq.dir/src/physics/player_controller.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/torq.dir/src/physics/player_controller.cpp.o -MF CMakeFiles/torq.dir/src/physics/player_controller.cpp.o.d -o CMakeFiles/torq.dir/src/physics/player_controller.cpp.o -c /home/yashas/Torq/Torq/src/physics/player_controller.cpp
+
+CMakeFiles/torq.dir/src/physics/player_controller.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/torq.dir/src/physics/player_controller.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/yashas/Torq/Torq/src/physics/player_controller.cpp > CMakeFiles/torq.dir/src/physics/player_controller.cpp.i
+
+CMakeFiles/torq.dir/src/physics/player_controller.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/torq.dir/src/physics/player_controller.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/yashas/Torq/Torq/src/physics/player_controller.cpp -o CMakeFiles/torq.dir/src/physics/player_controller.cpp.s
+
 CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o: CMakeFiles/torq.dir/flags.make
 CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o: ../src/resources/chunk_cache.cpp
 CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o: CMakeFiles/torq.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o -MF CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o.d -o CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o -c /home/yashas/Torq/Torq/src/resources/chunk_cache.cpp
 
 CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.i: cmake_force
@@ -254,7 +268,7 @@ CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.s: cmake_force
 CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o: CMakeFiles/torq.dir/flags.make
 CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o: ../src/resources/chunk_mesh.cpp
 CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o: CMakeFiles/torq.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o -MF CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o.d -o CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o -c /home/yashas/Torq/Torq/src/resources/chunk_mesh.cpp
 
 CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.i: cmake_force
@@ -268,7 +282,7 @@ CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.s: cmake_force
 CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o: CMakeFiles/torq.dir/flags.make
 CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o: ../src/resources/chunk_renderer.cpp
 CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o: CMakeFiles/torq.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o -MF CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o.d -o CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o -c /home/yashas/Torq/Torq/src/resources/chunk_renderer.cpp
 
 CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.i: cmake_force
@@ -282,7 +296,7 @@ CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.s: cmake_force
 CMakeFiles/torq.dir/src/resources/chunk_worker.cpp.o: CMakeFiles/torq.dir/flags.make
 CMakeFiles/torq.dir/src/resources/chunk_worker.cpp.o: ../src/resources/chunk_worker.cpp
 CMakeFiles/torq.dir/src/resources/chunk_worker.cpp.o: CMakeFiles/torq.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/torq.dir/src/resources/chunk_worker.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/torq.dir/src/resources/chunk_worker.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/torq.dir/src/resources/chunk_worker.cpp.o -MF CMakeFiles/torq.dir/src/resources/chunk_worker.cpp.o.d -o CMakeFiles/torq.dir/src/resources/chunk_worker.cpp.o -c /home/yashas/Torq/Torq/src/resources/chunk_worker.cpp
 
 CMakeFiles/torq.dir/src/resources/chunk_worker.cpp.i: cmake_force
@@ -296,7 +310,7 @@ CMakeFiles/torq.dir/src/resources/chunk_worker.cpp.s: cmake_force
 CMakeFiles/torq.dir/src/resources/region_store.cpp.o: CMakeFiles/torq.dir/flags.make
 CMakeFiles/torq.dir/src/resources/region_store.cpp.o: ../src/resources/region_store.cpp
 CMakeFiles/torq.dir/src/resources/region_store.cpp.o: CMakeFiles/torq.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/torq.dir/src/resources/region_store.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/torq.dir/src/resources/region_store.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/torq.dir/src/resources/region_store.cpp.o -MF CMakeFiles/torq.dir/src/resources/region_store.cpp.o.d -o CMakeFiles/torq.dir/src/resources/region_store.cpp.o -c /home/yashas/Torq/Torq/src/resources/region_store.cpp
 
 CMakeFiles/torq.dir/src/resources/region_store.cpp.i: cmake_force
@@ -310,7 +324,7 @@ CMakeFiles/torq.dir/src/resources/region_store.cpp.s: cmake_force
 CMakeFiles/torq.dir/src/resources/resource.cpp.o: CMakeFiles/torq.dir/flags.make
 CMakeFiles/torq.dir/src/resources/resource.cpp.o: ../src/resources/resource.cpp
 CMakeFiles/torq.dir/src/resources/resource.cpp.o: CMakeFiles/torq.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/torq.dir/src/resources/resource.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/torq.dir/src/resources/resource.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/torq.dir/src/resources/resource.cpp.o -MF CMakeFiles/torq.dir/src/resources/resource.cpp.o.d -o CMakeFiles/torq.dir/src/resources/resource.cpp.o -c /home/yashas/Torq/Torq/src/resources/resource.cpp
 
 CMakeFiles/torq.dir/src/resources/resource.cpp.i: cmake_force
@@ -324,7 +338,7 @@ CMakeFiles/torq.dir/src/resources/resource.cpp.s: cmake_force
 CMakeFiles/torq.dir/src/resources/thread_pool.cpp.o: CMakeFiles/torq.dir/flags.make
 CMakeFiles/torq.dir/src/resources/thread_pool.cpp.o: ../src/resources/thread_pool.cpp
 CMakeFiles/torq.dir/src/resources/thread_pool.cpp.o: CMakeFiles/torq.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/torq.dir/src/resources/thread_pool.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/torq.dir/src/resources/thread_pool.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/torq.dir/src/resources/thread_pool.cpp.o -MF CMakeFiles/torq.dir/src/resources/thread_pool.cpp.o.d -o CMakeFiles/torq.dir/src/resources/thread_pool.cpp.o -c /home/yashas/Torq/Torq/src/resources/thread_pool.cpp
 
 CMakeFiles/torq.dir/src/resources/thread_pool.cpp.i: cmake_force
@@ -338,7 +352,7 @@ CMakeFiles/torq.dir/src/resources/thread_pool.cpp.s: cmake_force
 CMakeFiles/torq.dir/src/worldgen/worldgen.cpp.o: CMakeFiles/torq.dir/flags.make
 CMakeFiles/torq.dir/src/worldgen/worldgen.cpp.o: ../src/worldgen/worldgen.cpp
 CMakeFiles/torq.dir/src/worldgen/worldgen.cpp.o: CMakeFiles/torq.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/torq.dir/src/worldgen/worldgen.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/torq.dir/src/worldgen/worldgen.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/torq.dir/src/worldgen/worldgen.cpp.o -MF CMakeFiles/torq.dir/src/worldgen/worldgen.cpp.o.d -o CMakeFiles/torq.dir/src/worldgen/worldgen.cpp.o -c /home/yashas/Torq/Torq/src/worldgen/worldgen.cpp
 
 CMakeFiles/torq.dir/src/worldgen/worldgen.cpp.i: cmake_force
@@ -363,6 +377,7 @@ torq_OBJECTS = \
 "CMakeFiles/torq.dir/src/graphics/models/cube.cpp.o" \
 "CMakeFiles/torq.dir/src/graphics/shader.cpp.o" \
 "CMakeFiles/torq.dir/src/graphics/texture.cpp.o" \
+"CMakeFiles/torq.dir/src/physics/player_controller.cpp.o" \
 "CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o" \
 "CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o" \
 "CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o" \
@@ -387,6 +402,7 @@ torq_EXTERNAL_OBJECTS =
 ../torq: CMakeFiles/torq.dir/src/graphics/models/cube.cpp.o
 ../torq: CMakeFiles/torq.dir/src/graphics/shader.cpp.o
 ../torq: CMakeFiles/torq.dir/src/graphics/texture.cpp.o
+../torq: CMakeFiles/torq.dir/src/physics/player_controller.cpp.o
 ../torq: CMakeFiles/torq.dir/src/resources/chunk_cache.cpp.o
 ../torq: CMakeFiles/torq.dir/src/resources/chunk_mesh.cpp.o
 ../torq: CMakeFiles/torq.dir/src/resources/chunk_renderer.cpp.o
@@ -404,7 +420,7 @@ torq_EXTERNAL_OBJECTS =
 ../torq: /usr/lib/x86_64-linux-gnu/libGLX.so
 ../torq: /usr/lib/x86_64-linux-gnu/libOpenGL.so
 ../torq: CMakeFiles/torq.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Linking CXX executable ../torq"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Linking CXX executable ../torq"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/torq.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

@@ -256,7 +256,8 @@ enum class BlockEditResult {
     Queued,
     NotResident,
     OutsideActiveRadius,
-    EditQueueFull
+    EditQueueFull,
+    BlockedByPlayer
 };
 
 struct ChunkCacheStats {

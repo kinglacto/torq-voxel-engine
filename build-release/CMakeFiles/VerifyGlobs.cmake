@@ -16,6 +16,7 @@ set(OLD_GLOB
   "/home/yashas/Torq/Torq/src/graphics/models/cube.cpp"
   "/home/yashas/Torq/Torq/src/graphics/shader.cpp"
   "/home/yashas/Torq/Torq/src/graphics/texture.cpp"
+  "/home/yashas/Torq/Torq/src/physics/player_controller.cpp"
   "/home/yashas/Torq/Torq/src/resources/chunk_cache.cpp"
   "/home/yashas/Torq/Torq/src/resources/chunk_mesh.cpp"
   "/home/yashas/Torq/Torq/src/resources/chunk_renderer.cpp"

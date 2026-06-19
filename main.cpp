@@ -24,6 +24,7 @@
 #include "src/graphics/models/cube.h"
 
 #include <chunk_cache.h>
+#include <player_controller.h>
 #include <chunk_renderer.h>
 #include <chunk_worker.h>
 #include <region_store.h>
@@ -38,15 +39,20 @@
 
 #include <vector>
 
-void processInput();
+torq::PlayerInputIntent processInput();
 void init();
 bool saveFramebufferScreenshot(GLFWwindow* window, const std::string& path);
+void handleBlockEditInput(torq::ChunkCache& chunkCache,
+						  const torq::PlayerController* player);
+void updateFreeCamera(const torq::PlayerInputIntent& input);
 
 float x, y, z;
 
 float deltaTime = 0.0f;	
 float lastFrame = 0.0f;
-bool printFPS = true;
+bool printFPS = false;
+// false = physics player, true = no-collision free-fly camera.
+bool freeCameraMode = true;
 double fpsPrintStart = 0.0;
 int fpsPrintFrames = 0;
 
@@ -56,10 +62,123 @@ double mouse_dx;
 double mouse_dy;
 double mouse_scroll;
 
-torq::ChunkCoord cameraChunkCoord() {
-	const auto world_x = static_cast<int>(std::floor(camera.cameraPos.x));
-	const auto world_y = static_cast<int>(std::floor(camera.cameraPos.y));
-	const auto world_z = static_cast<int>(std::floor(camera.cameraPos.z));
+namespace {
+
+constexpr float BLOCK_EDIT_REACH = 6.0f;
+constexpr float BLOCK_EDIT_RAY_STEP = 0.05f;
+
+struct BlockRaycastHit {
+	bool hit{false};
+	torq::WorldBlockCoord delete_target{};
+	torq::WorldBlockCoord place_target{};
+	bool has_place_target{false};
+};
+
+int floorToBlock(const float value) {
+	return static_cast<int>(std::floor(value));
+}
+
+bool tryGetResidentSolid(const torq::ChunkCache& chunkCache,
+						 const torq::WorldBlockCoord block,
+						 bool* outSolid) {
+	if (block.y >= BLOCK_Y_SIZE) {
+		*outSolid = false;
+		return true;
+	}
+
+	if (block.y < 0) {
+		return false;
+	}
+
+	torq::BlockData data{};
+	if (!chunkCache.tryGetBlock(block, &data)) {
+		return false;
+	}
+
+	*outSolid = data.id != BlockMap::air;
+	return true;
+}
+
+BlockRaycastHit raycastEditableBlock(const torq::ChunkCache& chunkCache,
+									 const glm::vec3 origin,
+									 glm::vec3 direction,
+									 const float maxDistance) {
+	BlockRaycastHit result{};
+	const float directionLength = glm::length(direction);
+	if (directionLength <= 0.0001f) {
+		return result;
+	}
+
+	direction /= directionLength;
+
+	torq::WorldBlockCoord previous_air{};
+	bool has_previous_air = false;
+	torq::WorldBlockCoord last_checked{};
+	bool has_last_checked = false;
+
+	for (float distance = 0.0f;
+		 distance <= maxDistance;
+		 distance += BLOCK_EDIT_RAY_STEP) {
+		const glm::vec3 point = origin + direction * distance;
+		const torq::WorldBlockCoord current{
+			floorToBlock(point.x),
+			floorToBlock(point.y),
+			floorToBlock(point.z)
+		};
+		if (has_last_checked && current == last_checked) {
+			continue;
+		}
+		last_checked = current;
+		has_last_checked = true;
+
+		bool solid = false;
+		if (!tryGetResidentSolid(chunkCache, current, &solid)) {
+			return result;
+		}
+
+		if (solid) {
+			result.hit = true;
+			result.delete_target = current;
+			result.place_target = previous_air;
+			result.has_place_target = has_previous_air;
+			return result;
+		}
+
+		previous_air = current;
+		has_previous_air = true;
+		result.place_target = previous_air;
+		result.has_place_target = true;
+	}
+
+	return result;
+}
+
+void printEditFailure(const char* action, const torq::BlockEditResult result) {
+	switch (result) {
+	case torq::BlockEditResult::NotResident:
+		std::cout << action << " failed: target chunk is not resident\n";
+		break;
+	case torq::BlockEditResult::OutsideActiveRadius:
+		std::cout << action << " failed: target is outside active radius\n";
+		break;
+	case torq::BlockEditResult::EditQueueFull:
+		std::cout << action << " failed: edit queue is full\n";
+		break;
+	case torq::BlockEditResult::BlockedByPlayer:
+		std::cout << action << " failed: placement intersects player\n";
+		break;
+	case torq::BlockEditResult::Applied:
+	case torq::BlockEditResult::Queued:
+		break;
+	}
+}
+
+} // namespace
+
+torq::ChunkCoord worldPositionChunkCoord(const glm::vec3 position) {
+	const auto world_x = static_cast<int>(std::floor(position.x));
+	const auto world_y = static_cast<int>(std::floor(position.y));
+	const auto world_z = static_cast<int>(std::floor(position.z));
 	return torq::chunkCoordFromWorldBlock(torq::WorldBlockCoord{
 		world_x,
 		world_y,
@@ -82,7 +201,7 @@ int main(){
 		return -1;
 	}
 
-	glfwSwapInterval(0);
+	glfwSwapInterval(1);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -115,6 +234,13 @@ int main(){
 	WorldGen::setMasterSeed(123456);
 	camera.pitch = -25.0f;
 	camera.updateCameraVectors();
+	const int spawnWorldX = static_cast<int>(std::floor(camera.cameraPos.x));
+	const int spawnWorldZ = static_cast<int>(std::floor(camera.cameraPos.z));
+	torq::PlayerController player{
+		camera.cameraPos - glm::vec3{0.0f, torq::PlayerController::EYE_HEIGHT, 0.0f}
+	};
+	camera.cameraPos = player.eyePosition();
+	bool playerSpawnResolved = false;
 
 	const std::filesystem::path regionDir =
 		std::filesystem::path(CACHE_DIR) / "chunks";
@@ -127,7 +253,7 @@ int main(){
 	torq::ChunkRenderer chunkRenderer{};
 	const torq::ChunkCacheConfig chunkCacheConfig{
 		.active_radius = 3,
-		.render_distance = 10,
+		.render_distance = 20,
 		.keep_margin = 1
 	};
 	torq::ChunkCache chunkCache{chunkCacheConfig, chunkWorkers};
@@ -148,9 +274,22 @@ int main(){
 		static_cast<float>(chunkCacheConfig.render_distance * BLOCK_X_SIZE);
 	const float fogStartDistance = renderDistanceBlocks * 0.75f;
 	const float fogEndDistance = renderDistanceBlocks * 1.35f;
+	const glm::vec3 sunDirection =
+		glm::normalize(glm::vec3{-0.45f, -1.0f, -0.35f});
+	const glm::vec3 sunColor{1.0f, 0.95f, 0.82f};
+	const glm::vec3 skyAmbientColor{0.78f, 0.86f, 1.0f};
+	const glm::vec3 groundAmbientColor{0.54f, 0.50f, 0.44f};
 	shader->set3Float("fogColor", fogColor);
 	shader->setFloat("fogStart", fogStartDistance);
 	shader->setFloat("fogEnd", fogEndDistance);
+	shader->set3Float("sunDirection", sunDirection);
+	shader->set3Float("sunColor", sunColor);
+	shader->set3Float("skyAmbientColor", skyAmbientColor);
+	shader->set3Float("groundAmbientColor", groundAmbientColor);
+	shader->setFloat("hemisphereStrength", 0.72f);
+	shader->setFloat("sunStrength", 0.45f);
+	shader->setFloat("sunWrap", 0.35f);
+	shader->setFloat("maxLight", 1.08f);
 
 	int captureFrame = -1;
 	if (const char* captureFrameEnv = std::getenv("TORQ_CAPTURE_FRAME")) {
@@ -182,11 +321,42 @@ int main(){
 		deltaTime = std::min(frameDelta, 0.05f);
 		lastFrame = currentFrame;
 		camera.deltaTime = deltaTime;
-		processInput();
+		const torq::PlayerInputIntent playerInput = processInput();
+		if (freeCameraMode) {
+			updateFreeCamera(playerInput);
+		}
 
-		chunkCache.setCenterChunk(cameraChunkCoord());
+		const glm::vec3 streamCenter =
+			freeCameraMode ? camera.cameraPos : player.feetPosition();
+		chunkCache.setCenterChunk(worldPositionChunkCoord(streamCenter));
 		streamingPipeline.applyWorkerResults(streamBudget);
 		chunkCache.tick(streamBudget, chunkRenderer);
+
+		if (!freeCameraMode && !playerSpawnResolved) {
+			glm::vec3 spawnFeetPosition{};
+			if (torq::tryFindSpawnAboveColumn(chunkCache,
+											  spawnWorldX,
+											  spawnWorldZ,
+											  &spawnFeetPosition)) {
+				player.teleportToFeetPosition(spawnFeetPosition, true);
+				playerSpawnResolved = true;
+			}
+		}
+
+		if (!freeCameraMode && playerSpawnResolved) {
+			player.tick(deltaTime,
+						playerInput,
+						camera.cameraFront,
+						camera.cameraRight,
+						chunkCache);
+			camera.cameraPos = player.eyePosition();
+		}
+		if (freeCameraMode || playerSpawnResolved) {
+			handleBlockEditInput(
+				chunkCache,
+				freeCameraMode ? nullptr : &player
+			);
+		}
 
 		view = camera.getViewMatrix();
 		projection = glm::perspective(glm::radians(camera.getZoom()),
@@ -269,23 +439,19 @@ int main(){
 	return 0;
 }
 
-void processInput() {
+torq::PlayerInputIntent processInput() {
+	torq::PlayerInputIntent input{};
+
 	if (keyboard::key(GLFW_KEY_ESCAPE)) {
 		screen.setShouldClose(true);
 	}
 
-	if (keyboard::key(GLFW_KEY_W))
-		camera.updateCameraPos(cameraDirection::FORWARD, deltaTime);
-	if (keyboard::key(GLFW_KEY_S))
-		camera.updateCameraPos(cameraDirection::BACKWARD, deltaTime);
-	if (keyboard::key(GLFW_KEY_D))
-		camera.updateCameraPos(cameraDirection::RIGHT, deltaTime);
-	if (keyboard::key(GLFW_KEY_A))
-		camera.updateCameraPos(cameraDirection::LEFT, deltaTime);
-	if (keyboard::key(GLFW_KEY_SPACE))
-		camera.updateCameraPos(cameraDirection::UP, deltaTime);
-	if (keyboard::key(GLFW_KEY_LEFT_SHIFT))
-		camera.updateCameraPos(cameraDirection::DOWN, deltaTime);
+	input.move_forward = keyboard::key(GLFW_KEY_W);
+	input.move_backward = keyboard::key(GLFW_KEY_S);
+	input.move_right = keyboard::key(GLFW_KEY_D);
+	input.move_left = keyboard::key(GLFW_KEY_A);
+	input.jump = keyboard::key(GLFW_KEY_SPACE);
+	input.descend_or_crouch = keyboard::key(GLFW_KEY_LEFT_SHIFT);
 
 	mouse_dx = mouse::getDX();
 	mouse_dy = mouse::getDY();
@@ -297,6 +463,91 @@ void processInput() {
 
 	if (mouse_scroll != 0) {
 		camera.updateCameraZoom(mouse_scroll);
+	}
+
+	return input;
+}
+
+void updateFreeCamera(const torq::PlayerInputIntent& input) {
+	if (input.move_forward) {
+		camera.updateCameraPos(cameraDirection::FORWARD, deltaTime);
+	}
+	if (input.move_backward) {
+		camera.updateCameraPos(cameraDirection::BACKWARD, deltaTime);
+	}
+	if (input.move_right) {
+		camera.updateCameraPos(cameraDirection::RIGHT, deltaTime);
+	}
+	if (input.move_left) {
+		camera.updateCameraPos(cameraDirection::LEFT, deltaTime);
+	}
+	if (input.jump) {
+		camera.updateCameraPos(cameraDirection::UP, deltaTime);
+	}
+	if (input.descend_or_crouch) {
+		camera.updateCameraPos(cameraDirection::DOWN, deltaTime);
+	}
+}
+
+void handleBlockEditInput(torq::ChunkCache& chunkCache,
+						  const torq::PlayerController* player) {
+	const bool deletePressed = keyboard::keyWentDown(GLFW_KEY_R);
+	const bool placePressed = mouse::buttonWentDown(GLFW_MOUSE_BUTTON_RIGHT);
+	if (!deletePressed && !placePressed) {
+		return;
+	}
+
+	const BlockRaycastHit hit = raycastEditableBlock(
+		chunkCache,
+		camera.cameraPos,
+		camera.cameraFront,
+		BLOCK_EDIT_REACH
+	);
+
+	if (deletePressed) {
+		if (!hit.hit) {
+			std::cout << "Delete failed: no solid block in reach\n";
+			return;
+		}
+
+		torq::BlockData air{};
+		air.id = BlockMap::air;
+		const torq::BlockEditResult result =
+			chunkCache.setBlock(hit.delete_target, air);
+		if (result == torq::BlockEditResult::Applied ||
+			result == torq::BlockEditResult::Queued) {
+			std::cout << "Deleted block "
+					  << hit.delete_target.x << ' '
+					  << hit.delete_target.y << ' '
+					  << hit.delete_target.z << '\n';
+		} else {
+			printEditFailure("Delete", result);
+		}
+	}
+
+	if (placePressed) {
+		if (!hit.has_place_target) {
+			std::cout << "Place failed: no adjacent air block\n";
+			return;
+		}
+
+		torq::BlockData grass{};
+		grass.id = BlockMap::grass;
+		const torq::BlockEditResult result = player == nullptr
+			? chunkCache.setBlock(hit.place_target, grass)
+			: torq::setBlockWithPlayerCollision(chunkCache,
+												*player,
+												hit.place_target,
+												grass);
+		if (result == torq::BlockEditResult::Applied ||
+			result == torq::BlockEditResult::Queued) {
+			std::cout << "Placed grass block "
+					  << hit.place_target.x << ' '
+					  << hit.place_target.y << ' '
+					  << hit.place_target.z << '\n';
+		} else {
+			printEditFailure("Place", result);
+		}
 	}
 }
 

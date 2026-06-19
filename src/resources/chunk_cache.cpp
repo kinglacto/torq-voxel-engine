@@ -849,6 +849,14 @@ bool ChunkCache::tryGetBlock(const WorldBlockCoord pos, BlockData* out) const {
 }
 
 bool ChunkCache::isSolidForPhysics(const WorldBlockCoord pos) const {
+    if (pos.y < 0) {
+        return true;
+    }
+
+    if (pos.y >= BLOCK_Y_SIZE) {
+        return false;
+    }
+
     BlockData block{};
     if (!tryGetBlock(pos, &block)) {
         return true;

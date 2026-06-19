@@ -154,12 +154,12 @@ CMakeFiles/torq.dir/all: lib/stb_image/CMakeFiles/stb_image.dir/all
 CMakeFiles/torq.dir/all: lib/noise/CMakeFiles/noise.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/torq.dir/build.make CMakeFiles/torq.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/torq.dir/build.make CMakeFiles/torq.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27 "Built target torq"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/yashas/Torq/Torq/build-release/CMakeFiles --progress-num=7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28 "Built target torq"
 .PHONY : CMakeFiles/torq.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/torq.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/yashas/Torq/Torq/build-release/CMakeFiles 27
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/yashas/Torq/Torq/build-release/CMakeFiles 28
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/torq.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/yashas/Torq/Torq/build-release/CMakeFiles 0
 .PHONY : CMakeFiles/torq.dir/rule
