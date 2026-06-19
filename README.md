@@ -1,4 +1,12 @@
-# Torq
+<h1 align="center">Torq</h1>
+
+<p align="center">
+  <video src="demo/voxel-engine-demo.mp4" controls muted loop width="100%">
+    Your browser does not support embedded videos.
+  </video>
+</p>
+
+Demo: [demo/voxel-engine-demo.mp4](demo/voxel-engine-demo.mp4)
 
 <p align="center">
   <img src="torq.png" alt="Torq voxel terrain screenshot" width="100%">
@@ -79,8 +87,8 @@ Most gameplay/debug tuning is still intentionally simple and lives in code:
 
 | Location | Setting |
 | --- | --- |
-| `main.cpp` | `freeCameraMode`: switch between physics player and free-fly camera |
-| `main.cpp` | `printFPS`: print FPS once per second |
+| `main.cpp` | Set `freeCameraMode = false` for physics/player mode, or `true` for no-collision free camera mode |
+| `main.cpp` | Set `printFPS = true` to print FPS once per second, or `false` to disable it |
 | `main.cpp` | `chunkCacheConfig.render_distance`: render distance in chunks |
 | `main.cpp` | `chunkCacheConfig.active_radius`: active/editable resident radius |
 | `include/player_controller.h` | `WALK_SPEED`, `JUMP_SPEED`, `GRAVITY` |
