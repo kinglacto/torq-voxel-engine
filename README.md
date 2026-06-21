@@ -1,13 +1,7 @@
 <h1 align="center">Torq</h1>
 
 <p align="center">
-  <a href="demo/voxel-engine-demo.mp4">
-    <img src="torq.png" alt="Torq voxel terrain demo" width="100%">
-  </a>
-</p>
-
-<p align="center">
-  <a href="demo/voxel-engine-demo.mp4">Watch the gameplay demo</a>
+  <img src="torq.png" alt="Torq voxel terrain screenshot" width="100%">
 </p>
 
 Torq is a C++20/OpenGL voxel terrain prototype focused on fast chunk streaming, optimized chunk meshing, and responsive first-person block interaction. The game currently generates grass terrain, streams chunks around the player, supports collision-aware movement, and lets you place/delete blocks in real time.
