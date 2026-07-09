@@ -59,7 +59,6 @@ add_executable(torq
         include/chunk_streaming.h
         include/region_store.h
         include/torq_utility.h
-        include/thread_pool.h
 )
 
 set_target_properties(torq
