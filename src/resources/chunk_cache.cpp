@@ -529,6 +529,8 @@ void ChunkCache::applyPersistedChunk(Result&& result, ChunkRenderer& renderer) {
 void ChunkCache::applyFailedJob(const Result& result) {
     if (result.source_job == JobType::LoadChunk) {
         stats_.load_jobs_completed++;
+    } else if (result.source_job == JobType::BuildChunkMesh) {
+        stats_.mesh_jobs_completed++;
     }
 
     ChunkSlot* slot = findSlot(result.chunk);
@@ -543,6 +545,14 @@ void ChunkCache::applyFailedJob(const Result& result) {
         slot->last_error = result.error != NO_ERROR ? result.error : FILE_ERROR;
         slot->next_retry_tick =
             storage_.current_stream_tick + LOAD_RETRY_COOLDOWN_TICKS;
+    }
+
+    if (result.source_job == JobType::BuildChunkMesh &&
+        slot->mesh_job_revision == result.revision) {
+        slot->mesh_job_revision = INVALID_REVISION;
+        if (slot->state == ChunkState::Resident && slot->pending_edits.count > 0) {
+            applyPendingEdits(*slot);
+        }
     }
 
     stats_.failures++;
@@ -745,6 +755,48 @@ void ChunkCache::submitMeshJobs(int& remaining_mesh_budget) {
     }
 }
 
+void ChunkCache::submitShutdownPersistJobs(int& remaining_persist_budget) {
+    if (remaining_persist_budget <= 0) {
+        return;
+    }
+
+    for (std::uint32_t i = 0;
+         i < storage_.pool.live_count && remaining_persist_budget > 0;
+         i++) {
+        ChunkSlot& slot = storage_.pool.slots[storage_.pool.live_slots[i]];
+        if (slot.state != ChunkState::Resident ||
+            !slot.data ||
+            !slot.dirty_for_disk ||
+            slot.mesh_job_revision != INVALID_REVISION ||
+            slot.pending_edits.count != 0) {
+            continue;
+        }
+
+        if (trySubmitPersist(slot)) {
+            remaining_persist_budget--;
+        }
+    }
+
+    updateInstantStats(stats_, storage_);
+}
+
+bool ChunkCache::shutdownPersistenceComplete() const noexcept {
+    for (std::uint32_t i = 0; i < storage_.pool.live_count; i++) {
+        const ChunkSlot& slot = storage_.pool.slots[storage_.pool.live_slots[i]];
+        if (slot.state == ChunkState::PersistingForEviction ||
+            slot.mesh_job_revision != INVALID_REVISION ||
+            slot.pending_edits.count != 0) {
+            return false;
+        }
+
+        if (slot.state == ChunkState::Resident && slot.dirty_for_disk) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void ChunkCache::processEvictions(StreamBudget budget, ChunkRenderer& renderer) {
     int remaining_persist_budget = std::max(0, budget.max_persist_jobs);
     int remaining_clean_budget = std::max(0, budget.max_clean_evictions);
@@ -790,19 +842,8 @@ void ChunkCache::processEvictions(StreamBudget budget, ChunkRenderer& renderer) 
                 continue;
             }
 
-            Job job{};
-            job.type = JobType::PersistChunk;
-            job.chunk = slot.coord;
-            job.revision = slot.current_revision;
-            job.owned_data = std::move(slot.data);
-
-            if (work_queue_.tryPush(std::move(job))) {
-                markResidentHorizontalNeighborsDirty(slot.coord);
-                slot.state = ChunkState::PersistingForEviction;
-                stats_.persist_jobs_submitted++;
+            if (trySubmitPersist(slot)) {
                 remaining_persist_budget--;
-            } else {
-                slot.data = std::move(job.owned_data);
             }
 
             i++;
@@ -827,6 +868,28 @@ void ChunkCache::processEvictions(StreamBudget budget, ChunkRenderer& renderer) 
     }
 
     updateInstantStats(stats_, storage_);
+}
+
+bool ChunkCache::trySubmitPersist(ChunkSlot& slot) {
+    if (slot.state != ChunkState::Resident || !slot.data) {
+        return false;
+    }
+
+    Job job{};
+    job.type = JobType::PersistChunk;
+    job.chunk = slot.coord;
+    job.revision = slot.current_revision;
+    job.owned_data = std::move(slot.data);
+
+    if (work_queue_.tryPush(std::move(job))) {
+        markResidentHorizontalNeighborsDirty(slot.coord);
+        slot.state = ChunkState::PersistingForEviction;
+        stats_.persist_jobs_submitted++;
+        return true;
+    }
+
+    slot.data = std::move(job.owned_data);
+    return false;
 }
 
 bool ChunkCache::tryGetBlock(const WorldBlockCoord pos, BlockData* out) const {

@@ -42,10 +42,15 @@ bool ChunkStreamingJobExecutor::execute(Job&& job, Result* out_result) {
             return true;
         }
 
-        out_result->cpu_mesh =
-            ChunkMesher::build(*job.read_data, job.neighbor_masks);
-        out_result->type = ResultType::ChunkMeshBuilt;
-        out_result->error = NO_ERROR;
+        try {
+            out_result->cpu_mesh =
+                ChunkMesher::build(*job.read_data, job.neighbor_masks);
+            out_result->type = ResultType::ChunkMeshBuilt;
+            out_result->error = NO_ERROR;
+        } catch (const std::exception&) {
+            out_result->type = ResultType::Failed;
+            out_result->error = CHUNK_MESH_CORRUPTED;
+        }
         return true;
     }
 

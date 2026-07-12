@@ -173,6 +173,43 @@ void printEditFailure(const char* action, const torq::BlockEditResult result) {
 	}
 }
 
+void flushChunkPersistenceForShutdown(
+	torq::ChunkStreamingPipeline& streamingPipeline,
+	torq::ChunkCache& chunkCache
+) {
+	const torq::StreamBudget shutdownBudget{
+		.max_results = static_cast<int>(torq::MAX_RESULTS_PER_FRAME),
+		.max_load_jobs = 0,
+		.max_persist_jobs = 64,
+		.max_mesh_jobs = 0,
+		.max_clean_evictions = 0
+	};
+	constexpr int MAX_SHUTDOWN_FLUSH_ITERATIONS = 20000;
+
+	int iterations = 0;
+	while (!chunkCache.shutdownPersistenceComplete() &&
+		   iterations < MAX_SHUTDOWN_FLUSH_ITERATIONS) {
+		streamingPipeline.applyWorkerResults(shutdownBudget);
+
+		int remainingPersistBudget = shutdownBudget.max_persist_jobs;
+		chunkCache.submitShutdownPersistJobs(remainingPersistBudget);
+
+		streamingPipeline.applyWorkerResults(shutdownBudget);
+		std::this_thread::yield();
+		iterations++;
+	}
+
+	if (!chunkCache.shutdownPersistenceComplete()) {
+		const torq::ChunkCacheStats& stats = chunkCache.stats();
+		std::cerr << "Warning: shutdown chunk persistence did not fully drain; "
+				  << "dirty_for_disk=" << stats.dirty_for_disk
+				  << " persisting=" << stats.persisting_for_eviction
+				  << " mesh_jobs=" << stats.mesh_jobs_in_flight
+				  << " pending_edits=" << stats.chunks_with_pending_edits
+				  << '\n';
+	}
+}
+
 } // namespace
 
 torq::ChunkCoord worldPositionChunkCoord(const glm::vec3 position) {
@@ -431,6 +468,7 @@ int main(){
 		frameIndex++;
 	}
 
+	flushChunkPersistenceForShutdown(streamingPipeline, chunkCache);
 	chunkWorkers.shutdown();
 	chunkRenderer.shutdown();
 	ResourceManager::deleteAll();

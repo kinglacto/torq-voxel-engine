@@ -36,6 +36,8 @@ public:
     [[nodiscard]] bool tryGetBlock(WorldBlockCoord pos, BlockData* out) const;
     [[nodiscard]] bool isSolidForPhysics(WorldBlockCoord pos) const;
     [[nodiscard]] BlockEditResult setBlock(WorldBlockCoord pos, BlockData block);
+    void submitShutdownPersistJobs(int& remaining_persist_budget);
+    [[nodiscard]] bool shutdownPersistenceComplete() const noexcept;
 
     [[nodiscard]] const ChunkCacheStorage& storage() const noexcept;
     [[nodiscard]] const ChunkCacheStats& stats() const noexcept;
@@ -57,6 +59,7 @@ private:
     void markResidentHorizontalNeighborsDirty(ChunkCoord coord);
     [[nodiscard]] ChunkNeighborMasks buildNeighborMasks(ChunkCoord coord) const noexcept;
 
+    [[nodiscard]] bool trySubmitPersist(ChunkSlot& slot);
     [[nodiscard]] bool trySubmitRelease(std::unique_ptr<ChunkData>& data);
 
     ChunkCacheConfig config_{};
