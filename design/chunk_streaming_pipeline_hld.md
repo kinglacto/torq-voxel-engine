@@ -1,6 +1,6 @@
 # Chunk Streaming Pipeline HLD
 
-Status: implemented baseline; keep updated as the architecture source of truth
+Status: implemented; keep updated as the architecture source of truth
 
 This document defines Torq's chunk streaming, region persistence, CPU meshing, GPU mesh ownership, block editing, and gameplay-query pipeline.
 
@@ -41,7 +41,7 @@ There is no renderer worker queue. The renderer is OpenGL-facing only:
 ```cpp
 bool uploaded = renderer.uploadMesh(coord, revision, std::move(cpu_mesh));
 renderer.deleteMesh(coord);
-renderer.draw();
+renderer.draw(shader, frustum);
 ```
 
 The cache and renderer interact directly only on the main thread through the frame pipeline. The renderer never loads chunks, never saves chunks, never builds CPU meshes, and never reads `ChunkData`.
@@ -58,6 +58,33 @@ Hard main-thread rules:
 - If a queue is full, the main thread skips submitting more work that frame.
 
 RegionStore may use mutexes internally, but RegionStore is called only by workers. RegionStore locks must never be acquired by the main thread.
+
+## The Two Main-Thread Stores
+
+`ChunkCacheStorage` and `ChunkRendererStorage` deliberately track the same
+`ChunkCoord` in separate domains. They are not paired slots and neither store
+owns the other.
+
+| Question | `ChunkCacheStorage` | `ChunkRendererStorage` |
+| --- | --- | --- |
+| Owner | `ChunkCache` on the main thread | `ChunkRenderer` on the main thread |
+| Represents | CPU chunk residency and streaming work | Uploaded GPU mesh residency and drawing work |
+| Main contents | `ChunkSlot` pool, coordinate-to-slot index, retry tick | `ChunkMesh` pool, coordinate-to-mesh index, draw iteration list |
+| Per-coordinate payload | Optional `unique_ptr<ChunkData>`, state, edits, revisions | OpenGL VAO/VBO handles, vertex count, uploaded revision |
+| Does not own | GPU resources, CPU mesh vertex buffers, region files, queues | `ChunkData`, edits, slot state, region files, queues |
+
+The two stores are intentionally allowed to be temporarily out of sync:
+
+```text
+loaded CPU chunk, no GPU mesh yet:       cache slot exists; renderer mesh does not
+remesh in flight:                        cache has newer current_revision; renderer draws older revision
+persisting for eviction:                 cache has moved CPU data to a worker; existing GPU mesh may still draw
+eviction completes:                      cache frees its slot and tells renderer to delete that mesh
+```
+
+`rendered_revision` inside a `ChunkSlot` is only the cache's record of what
+revision successfully reached the renderer. It is not GPU storage and it is
+not a pointer to a `ChunkMesh`.
 
 ## World Constants
 
@@ -296,6 +323,17 @@ Rules:
 
 ## ChunkCache Storage
 
+`ChunkCache` owns one private `ChunkCacheStorage storage_`. This is the
+authoritative CPU-side residency and scheduling database for chunks known to
+the streaming system. It answers `ChunkCoord -> ChunkSlot`, chooses slots to
+load, mesh, persist, retry, or evict, and provides the resident block data used
+by gameplay queries.
+
+`ChunkCacheStorage` does **not** own worker queues, `RegionStore`, OpenGL
+objects, or CPU mesh vertex buffers. A `ChunkSlot` may own one heap-allocated
+`ChunkData`, but the slots themselves, their coordinate index, and all edit/
+revision bookkeeping are fixed arrays preallocated before the render loop.
+
 Chunk slots are not allocated with `new`, `make_unique`, or `std::unordered_map` insertion during the render loop.
 
 The cache owns a fixed slot pool and a fixed-capacity coordinate index:
@@ -400,7 +438,7 @@ pool.free_stack[pool.free_count++] = freed_id
 
 Eviction scans iterate `pool.live_slots[0..live_count)`, not hash buckets.
 
-The index uses open addressing with linear or Robin Hood probing. It does not allocate. If tombstones exceed a fixed threshold, the main thread rebuilds the index in-place over the fixed `entries` array.
+The index uses open addressing with linear probing. It does not allocate. If tombstones exceed a fixed threshold, the main thread rebuilds the index in-place over the fixed `entries` array.
 
 There is no vector-backed chunk-slot storage and no per-slot heap allocation.
 
@@ -455,6 +493,10 @@ Field meaning:
 - `next_retry_tick`: cache-tick threshold before retrying a failed load.
 
 `mesh_job_revision` is a job throttle, not another data version. Without it, the cache would submit the same mesh job every frame while an older mesh job is still running.
+
+The cache can know that a revision was uploaded through `rendered_revision`,
+but it never owns the VAO/VBO for that revision. `ChunkRendererStorage` owns
+those resources independently.
 
 ## Data Movement Rules
 
@@ -560,6 +602,7 @@ struct BuildChunkMeshJob {
     ChunkCoord coord;
     const ChunkData* read_data;
     uint64_t revision;
+    ChunkNeighborMasks neighbor_masks;
 };
 ```
 
@@ -571,6 +614,7 @@ job.type = JobType::BuildChunkMesh;
 job.chunk = slot.coord;
 job.read_data = slot.data.get();
 job.revision = slot.current_revision;
+job.neighbor_masks = buildNeighborMasks(slot.coord);
 
 if work_queue.try_push(std::move(job)):
     slot.mesh_job_revision = slot.current_revision;
@@ -581,7 +625,7 @@ if work_queue.try_push(std::move(job)):
 Worker flow:
 
 ```cpp
-CpuChunkMesh cpu_mesh = ChunkMesher::build(*job.read_data);
+CpuChunkMesh cpu_mesh = ChunkMesher::build(*job.read_data, job.neighbor_masks);
 return ChunkMeshBuilt { job.coord, job.revision, std::move(cpu_mesh) };
 ```
 
@@ -620,7 +664,9 @@ This design does not store edit history for surgical VBO patches. One block edit
 
 ## Persist-On-Evict Rule
 
-ChunkCache does not write active resident chunks to disk in the background.
+During normal gameplay, `ChunkCache` does not write active resident chunks to
+disk in the background. The shutdown path is the exception: it drains worker
+results and persists every dirty resident chunk before workers stop.
 
 Disk writes happen only when a dirty chunk is selected for eviction.
 
@@ -666,7 +712,11 @@ slot.data == nullptr
 slot.state == ChunkState::PersistingForEviction
 ```
 
-The slot is not editable or renderable until the persist result is applied.
+The slot is not queryable, editable, or eligible for meshing until the persist
+result is applied because its `ChunkData` pointer has moved to the worker. Its
+already-uploaded GPU mesh is deliberately left in `ChunkRendererStorage` and
+may continue drawing until persistence succeeds and eviction deletes it. This
+avoids a visual hole while disk IO is in flight.
 
 Persist success:
 
@@ -674,7 +724,7 @@ Persist success:
 slot.dirty_for_disk = false;
 
 if outside_keep_window(slot.coord):
-    if tryReleaseChunkData(result.data):
+    if trySubmitRelease(result.data):
         renderer.deleteMesh(slot.coord)
         freeSlot(slot.id)
     else:
@@ -694,7 +744,10 @@ slot.dirty_for_disk = true;
 slot.last_error = result.error;
 ```
 
-Dirty chunks are never dropped without being persisted.
+Normal eviction never drops a dirty chunk without a successful persist. During
+shutdown, the explicit flush warns if repeated IO failures or its iteration cap
+leave dirty data unresolved; in that exceptional case, an unpersisted edit can
+still be lost when the process exits.
 
 ## Loading Rule
 
@@ -771,7 +824,7 @@ RegionStore does not cache:
 Region file path:
 
 ```text
-assets/chunks/r.<region_x>.<region_z>.region
+<CACHE_DIR>/chunks/r.<region_x>.<region_z>.region
 ```
 
 Region file format:
@@ -884,6 +937,7 @@ struct Job {
 
     const ChunkData* read_data;              // BuildChunkMesh only
     std::unique_ptr<ChunkData> owned_data;   // PersistChunk / ReleaseChunkData only
+    ChunkNeighborMasks neighbor_masks;       // BuildChunkMesh only; fixed border snapshots
 };
 ```
 
@@ -924,7 +978,7 @@ Job payload rules:
 Release helper:
 
 ```cpp
-bool tryReleaseChunkData(std::unique_ptr<ChunkData>& data) {
+bool trySubmitRelease(std::unique_ptr<ChunkData>& data) {
     Job job;
     job.type = JobType::ReleaseChunkData;
     job.owned_data = std::move(data);
@@ -943,7 +997,8 @@ API:
 
 ```cpp
 void setCenterChunk(ChunkCoord center);
-void tick(StreamBudget budget);
+void ChunkStreamingPipeline::applyWorkerResults(StreamBudget budget);
+void ChunkCache::tick(StreamBudget budget, ChunkRenderer& renderer);
 ```
 
 Budget:
@@ -962,9 +1017,9 @@ Main-thread frame order:
 
 ```cpp
 cache.setCenterChunk(center);
-pipeline.applyWorkerResults(cache, renderer, budget);
-cache.tick(budget);
-renderer.draw();
+pipeline.applyWorkerResults(budget);
+cache.tick(budget, renderer);
+renderer.draw(shader, frustum);
 ```
 
 `pipeline.applyWorkerResults` is main-thread orchestration:
@@ -979,16 +1034,21 @@ for result in result_buffer[0..count):
         cache.applyLoadedChunk(result)
 
     if result is ChunkPersisted:
-        outcome = cache.applyPersistedChunk(result)
-        if outcome.delete_mesh:
-            renderer.deleteMesh(result.chunk)
+        cache.applyPersistedChunk(std::move(result), renderer)
 
     if result is ChunkMeshBuilt:
-        pipeline.applyBuiltMeshResult(cache, renderer, result)
+        cache.applyBuiltMeshResult(std::move(result), renderer)
 
     if result is Failed:
-        cache.applyFailedJob(result)
+        if result.source_job is PersistChunk:
+            cache.applyPersistedChunk(std::move(result), renderer)
+        else:
+            cache.applyFailedJob(result)
 ```
+
+`ChunkCache::applyPersistedChunk` itself decides whether persistence completion
+restores CPU data or deletes the renderer mesh and frees the cache slot. The
+pipeline dispatches results; it does not own a second eviction policy.
 
 `cache.tick` order:
 
@@ -1084,7 +1144,7 @@ slot.pending_edits.count == 0
 Evicting a clean resident chunk does:
 
 ```cpp
-if tryReleaseChunkData(slot.data):
+if trySubmitRelease(slot.data):
     renderer.deleteMesh(slot.coord)
     freeSlot(slot.id)
 ```
@@ -1120,7 +1180,16 @@ The cache must not erase a slot while `mesh_job_revision != INVALID_REVISION`, b
 
 ## Renderer Storage
 
-Renderer owns GPU meshes in fixed CPU-side storage:
+`ChunkRenderer` owns one private `ChunkRendererStorage storage_`. This is a
+fixed CPU-side registry of GPU mesh resources, not a second copy of the world.
+Each live `ChunkMesh` owns only its OpenGL VAO/VBO handles, vertex count, and
+uploaded revision; the worker's `CpuChunkMesh::vertices` vector is consumed by
+`uploadMesh` and is not retained in renderer storage.
+
+Renderer storage answers `ChunkCoord -> MeshId` and supplies a dense list of
+uploaded meshes for drawing. `mesh_coords[mesh_id]` is the reverse mapping
+needed when the renderer iterates `live_meshes` and builds each chunk model
+transform.
 
 ```cpp
 using MeshId = uint32_t;
@@ -1137,6 +1206,7 @@ struct ChunkMeshIndexEntry {
 
 struct ChunkMeshPool {
     std::array<ChunkMesh, MAX_CHUNK_MESHES> meshes;
+    std::array<ChunkCoord, MAX_CHUNK_MESHES> mesh_coords;
     std::array<MeshId, MAX_CHUNK_MESHES> free_stack;
     uint32_t free_count;
 
@@ -1161,7 +1231,7 @@ Renderer API:
 ```cpp
 bool uploadMesh(ChunkCoord coord, uint64_t revision, CpuChunkMesh&& mesh);
 void deleteMesh(ChunkCoord coord);
-void draw();
+void draw(Shader* shader, const ChunkFrustum& frustum);
 ```
 
 Renderer flow:
@@ -1193,7 +1263,8 @@ enum class BlockEditResult {
     Queued,
     NotResident,
     OutsideActiveRadius,
-    EditQueueFull
+    EditQueueFull,
+    BlockedByPlayer
 };
 
 BlockEditResult setBlock(WorldBlockCoord pos, blockData block);
@@ -1210,6 +1281,12 @@ These calls are main-thread calls into `ChunkCache`. They are intentionally not 
 `setBlock` may return `Queued` when the target chunk currently has an active mesh read lease. A queued edit is guaranteed to apply later. `setBlock` returns `EditQueueFull` instead of blocking when the fixed edit buffer is full.
 
 ## Stats
+
+`ChunkCacheStats` is cache-owned diagnostic state. The slot/state/job/edit/
+upload/eviction counters are updated by the current cache path. The declared
+`region_generations`, `bytes_read`, and `bytes_written` fields are reserved for
+future RegionStore instrumentation and are not currently incremented, so they
+must not be reported as live IO telemetry.
 
 ```cpp
 struct ChunkCacheStats {
@@ -1247,25 +1324,23 @@ struct ChunkCacheStats {
 };
 ```
 
-## Implementation Plan
+## Implementation Status
 
-1. Add coordinate structs and hash helpers.
-2. Implement the fixed `ChunkSlotPool`, fixed `ChunkSlotIndex`, free-slot stack, and live-slot array.
-3. Replace `ChunkData` ownership with chunk-level `std::unique_ptr<ChunkData>` and state-based worker read leases.
-4. Implement `RegionStore` with header metadata cache, `regions_mutex`, and per-region file locks.
-5. Add the worker job system with `LoadChunk`, `PersistChunk`, `BuildChunkMesh`, and `ReleaseChunkData`.
-6. Replace renderer-owned load request sets with `ChunkCacheStorage`.
-7. Implement load job submission and result application.
-8. Implement CPU mesh job submission, stale-result dropping, and renderer upload.
-9. Implement block edit path and boundary mesh invalidation.
-10. Implement persist-on-evict and clean eviction without copying or main-thread freeing `ChunkData`.
-11. Wire stats.
+The following runtime path is implemented:
 
-## Legacy File Policy
+1. `main.cpp` constructs `RegionStore`, `ChunkStreamingJobExecutor`,
+   `ChunkWorkerPool`, `ChunkRenderer`, `ChunkCache`, and
+   `ChunkStreamingPipeline`.
+2. Each frame, the main thread sets the center, drains bounded worker results,
+   schedules bounded cache work, runs gameplay/physics, then draws renderer
+   storage through a frustum.
+3. The active queue implementation is `BoundedMpmcQueue` inside
+   `ChunkWorkerPool`; the generic `ThreadPool` has been removed.
+4. On exit, the cache performs a shutdown persistence flush before worker
+   shutdown so dirty resident chunks normally return through the same persist
+   result path.
 
-The existing resource-layer chunk code is not the source of truth for the new implementation. This HLD is the source of truth.
-
-The old loader filename has been removed. Implement the new architecture in these files:
+The active implementation is in:
 
 - `include/chunk_cache.h`
 - `src/resources/chunk_cache.cpp`
@@ -1275,19 +1350,12 @@ The old loader filename has been removed. Implement the new architecture in thes
 - `src/resources/chunk_renderer.cpp`
 - `include/chunk_mesh.h`
 - `src/resources/chunk_mesh.cpp`
+- `include/chunk_worker.h`
+- `src/resources/chunk_worker.cpp`
 
-The removed legacy renderer/loader implementation contained stale concepts rejected by this HLD: `ActiveChunk`, `std::shared_ptr` chunk ownership, renderer-owned loading, renderer-owned remesh queues, `std::map` active chunk storage, and synchronous cache/renderer coupling.
-
-`include/active_chunk.h` and `src/resources/active_chunk.cpp` are intentionally removed and must not be reintroduced.
-
-Review these files and reuse only low-level code that still fits the HLD:
-
-- `include/thread_pool.h`
-- `src/resources/thread_pool.cpp`
-- `include/thread_safe_queue.h`
-
-`chunk_mesh` may keep useful vertex/face generation code, but ownership and scheduling must move to `ChunkMesher` worker jobs. `thread_pool` and `thread_safe_queue` may be reused only if they provide nonblocking main-thread `try_push` / bounded result draining semantics; otherwise replace them.
-
-Do not use stale source code to override this document. If code and HLD disagree, implement the HLD.
-
-`main.cpp` has the old streaming callsite disabled. During implementation, wire it to `ChunkCache`, `ChunkStreamingPipeline`, and `ChunkRenderer`; do not restore the old `ChunkLoader` wiring.
+`include/thread_safe_queue.h` still contains a legacy mutex-backed
+`ThreadSafeQueue` template, but the active streaming path uses only
+`BoundedMpmcQueue`. Future changes must preserve the ownership, nonblocking
+submission, and main-thread OpenGL rules defined above. When code evolves, update
+this HLD and the cache/region LLD together rather than treating either document
+as a historical implementation plan.
